@@ -1,0 +1,5 @@
+from fairseq.models import register_model_architecture
+from fairseq.models.transformer import transformer_iwslt_de_en, transformer_vaswani_wmt_en_de_big
+from fairseq.models.lstm import lstm_wiseman_iwslt_de_en
+from oversmoothing_task import OversmoothingTranslationTask
+from oversmoothing_criterion import OversmoothingCriterion

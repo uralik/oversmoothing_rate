@@ -1,0 +1,40 @@
+#!/bin/bash
+#SBATCH --job-name=nmt_eos
+#SBATCH --open-mode=append
+#SBATCH --output=../slurm_output/%j_%x.out
+#SBATCH --error=../slurm_output/%j_%x.err
+#SBATCH --export=ALL
+#SBATCH --time=10:00:00
+#SBATCH --gres=gpu:rtx8000:1
+#SBATCH --mem=32G
+#SBATCH -c 4
+#SBATCH --array=1-5
+
+PYTHON_SWEEP_PATH=./fairseq_module/iwslt17_baseline.py
+EXPERIMENT_NAME=pretrain_iwslt17_pure_baseline
+LANGUAGE=fr
+
+#singularity exec --nv --overlay $SCRATCH/mae9785_overlay.ext3:ro /scratch/mae9785/cuda11.1-cudnn8-devel-ubuntu18.04.sif /bin/bash -c "
+#source /ext3/env.sh
+#conda activate nmt_eos
+
+python  ${PYTHON_SWEEP_PATH} --call_fn ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --language ${LANGUAGE} | xargs fairseq-train
+
+#python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 1 | xargs python ./fairseq_module/validate.py
+
+python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 5 | xargs python ./fairseq_module/validate.py
+
+python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 500 | xargs python ./fairseq_module/validate.py
+
+#python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 1000 | xargs python ./fairseq_module/validate.py
+
+#python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 1000 | xargs python ./fairseq_module/validate.py
+
+#python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 1500 | xargs python ./fairseq_module/validate.py
+
+#python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 2000 | xargs python ./fairseq_module/validate.py
+
+#python ${PYTHON_SWEEP_PATH} --call_fn generate_trained_sweep --experiment_name_to_generate ${EXPERIMENT_NAME}  --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 5 --nbest 1 | xargs python ./fairseq_module/generate.py
+
+#python ${PYTHON_SWEEP_PATH} --call_fn generate_trained_sweep --experiment_name_to_generate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 500 --nbest 1 | xargs python ./fairseq_module/generate.py
+#"
