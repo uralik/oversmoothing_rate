@@ -25,21 +25,18 @@ BPE_CODES=fastbpe.code
 URLS=(
     "http://statmt.org/wmt13/training-parallel-commoncrawl.tgz"
     "http://data.statmt.org/wmt17/translation-task/training-parallel-nc-v12.tgz"
-    "http://data.statmt.org/news-commentary/v14/training/news-commentary-v14.en-ru.tsv.gz"
     "http://data.statmt.org/wmt19/translation-task/dev.tgz"
     "http://data.statmt.org/wmt19/translation-task/test.tgz"
 )
 FILES=(
     "training-parallel-commoncrawl.tgz"
     "training-parallel-nc-v12.tgz"
-    "news-commentary-v14.en-ru.tsv.gz"
     "dev.tgz"
     "test.tgz"
 )
 CORPORA=(
     "commoncrawl.ru-en"
     "training/news-commentary-v12.ru-en"
-    "news-commentary-v14.ru-en"  # this needs a tsv split first!
 )
 
 if [ ! -d "$SCRIPTS" ]; then
