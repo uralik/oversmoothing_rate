@@ -1,16 +1,16 @@
 #!/bin/bash
 #SBATCH --job-name=wmtdeen
 #SBATCH --open-mode=append
-#SBATCH --output=./slurm_output/%j_%x.out
-#SBATCH --error=./slurm_output/%j_%x.err
+#SBATCH --output=./slurm_output/%A_%a_%j_%x.out
+#SBATCH --error=./slurm_output/%A_%a_%j_%x.err
 #SBATCH --export=ALL
 #SBATCH --time=48:00:00
 #SBATCH --gres=gpu:rtx8000:1
 #SBATCH --mem=32G
 #SBATCH -c 4
-#SBATCH --array=22-105
+#SBATCH --array=1-105
 
-PYTHON_SWEEP_PATH=../sweep_configs/wmt19_finetune_fixed.py
+PYTHON_SWEEP_PATH=../sweep_configs/wmt19_finetune.py
 EXPERIMENT_NAME=finetune_wmt19_deen_osl
 FAIRSEQ_MODULE=../fairseq_module
 

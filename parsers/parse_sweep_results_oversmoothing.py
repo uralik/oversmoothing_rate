@@ -28,17 +28,12 @@ class StatsParserOversmoothing:
         self.model_decoding_settings = []
 
         self.bleu = BLEU()
-        self.scorer = score.BleurtScorer('/home/mae9785/BLEURT-20-D12')
 
         self.aggregations = {
             'max': np.max,
             'min': np.min,
             'avg': np.mean
         }
-
-        self.bleurt_scores = {}
-        self.length_ratios = {}
-        self.nt_eos_log_probs = {}
 
         self.experiments_directory = experiments_directory
         self.params = params
@@ -51,8 +46,6 @@ class StatsParserOversmoothing:
         self.compute_length_ratio()
         
     def load_results(self):
-        # Pathlib doesnt follow symlinks due to ** in the rglob
-        #pkl_fnames = list(Path(self.experiments_directory).rglob('*.pkl'))
         if isinstance(self.experiments_directory, list):
             pkl_fnames = []
             for exp_dir in self.experiments_directory:
@@ -71,7 +64,6 @@ class StatsParserOversmoothing:
                 
             model = pickle.load(open(pkl_file, 'rb'))
             gc.collect()
-            #import pdb; pdb.set_trace()
             cfg_to_load = 'saved_cfg' if 'saved_cfg' in model[0] else 'cfg'
             full_cfg = vars(model[0][cfg_to_load]['model'])
             cfg_criterion = model[0][cfg_to_load]['criterion']
@@ -141,44 +133,12 @@ class StatsParserOversmoothing:
         refs = update['generated_refs_text']
         return self.bleu.corpus_score(beam_top_hyps, [refs]).score
 
-    def compute_bleurt(self, update, model_id):
-        return 0
-        nbest1_hyps = [hyps[0] for hyps in update['generated_hyps_text']]
-        refs = update['generated_refs_text']
-        scores = self.scorer.score(references=refs, candidates=nbest1_hyps, batch_size=100)
-        self.bleurt_scores[model_id] = scores
-        return np.mean(np.array(scores) * 100)
-
-    def calc_number_of_abrupted_seqs(self, update):
-        ok = 0
-        total = 0
-        for hyps in update['generated_hyps_text']:
-            total += 1
-            top_hyp = hyps[0]
-            ending = top_hyp.split()[-1]
-            if ending in ['.', '?', '!', '...', '&quot;'] or ending[-1] == '.':
-                ok += 1
-        return (total - ok) / total * 100
-
-    def calc_empty_winrate(self, update, mode='target'):
-        winrate = 0
-        for seq, eos_seq in zip(update[f'{mode}_model_log_probs'], update[f'{mode}_eos_log_probs_nt']):
-            seq_log_prob = sum([s[0] for s in seq[:len(eos_seq) + 1]])
-            eos_log_prob = eos_seq[0]
-            if seq_log_prob > eos_log_prob:
-                winrate += 1
-        return winrate / len(update['generated_eos_log_probs_nt'])
-
     def preprocess_metrics(self):
         for i, model in enumerate(self.models):
             for update in model:
                 update['bleu'] = self.compute_bleu(update)
-                update['abrupted'] = self.calc_number_of_abrupted_seqs(update)
-                update['bleurt'] = self.compute_bleurt(update, i)
                 update['target_generated_lenratio_mean'] = self.__recalculate_len_ratio(update, i)
                 update['target_generated_lenratio_seq_mean'] = self.__recalculate_len_ratio_seq(update, i)
-                update['target_empty_winrate'] = self.calc_empty_winrate(update, 'target')
-                update['generated_empty_winrate'] = self.calc_empty_winrate(update, 'generated')
                 for seq_type in ['target']:
                     update[f'{seq_type}_nonterminal_ll'] = self.__calculate_nonterminal_ll(update, seq_type, model_id=i)
                     update[f'{seq_type}_terminal_ll'] = self.__calculate_terminal_ll(update, seq_type)
@@ -225,12 +185,6 @@ class StatsParserOversmoothing:
                 model[-1][f'skew_{seq_type}_false_eos_r'] = false_eos_ranks_stats.skewness
                 model[-1][f'mean_{seq_type}_false_eos_r'] = false_eos_ranks_stats.mean
                 model[-1][f'std_{seq_type}_false_eos_r'] = np.sqrt(false_eos_ranks_stats.variance)
-                # how many false eos ranks are in beam in the worst case
-                #false_eos_ranks = np.array(false_eos_ranks)
-                #in_beam_false_eos_count = np.sum(false_eos_ranks <= decoding_settings['beam']) / float(len(false_eos_ranks))
-                #in_beam_false_eos_med = np.median(false_eos_ranks[np.array(false_eos_ranks) <= decoding_settings['beam']])
-                #model[-1][f'{seq_type}_false_eos_r_in_beam'] = in_beam_false_eos_count
-                #model[-1][f'{seq_type}_false_eos_r_in_beam_med'] = in_beam_false_eos_med
 
                 true_eos_ranks_stats = scipy.stats.describe(model[-1][f'{seq_type}_true_eos_ranks'])
                 true_eos_ranks_median = np.median(model[-1][f'{seq_type}_true_eos_ranks'])
@@ -238,8 +192,6 @@ class StatsParserOversmoothing:
                 model[-1][f'median_{seq_type}_true_eos_r'] = true_eos_ranks_median
                 model[-1][f'mean_{seq_type}_true_eos_r'] = true_eos_ranks_stats.mean
                 model[-1][f'std_{seq_type}_true_eos_r'] = np.sqrt(true_eos_ranks_stats.variance)
-                #in_beam_true_eos_count = np.sum(np.array(model[-1][f'{seq_type}_true_eos_ranks']) <= decoding_settings['beam']) / float(len(model[-1][f'{seq_type}_true_eos_ranks']))
-                #model[-1][f'{seq_type}_true_eos_r_in_beam'] = in_beam_true_eos_count
 
 
     def compute_length_ratio(self):
@@ -266,45 +218,6 @@ class StatsParserOversmoothing:
                 model_info[metric][update_str] = update[metric]
         return self.__generate_dataframe(model_info)
 
-    def draw_distributions(self, model_id, distribution_name, update_step=-1,
-                           xlim=200, ylim=250):  # either 'target_eos_len_distribution' or 'generated_eos_len_distribution'
-        model = self.models[model_id]
-        distribution = model[update_step][distribution_name]
-        num_eos_tokens = len(distribution.keys())
-        grid_height = int(np.ceil(num_eos_tokens / 2))
-        fig, axes = plt.subplots(grid_height, 2, figsize=(30, grid_height * 10))
-        axes = axes.ravel()
-        for eos_id, axis in zip(sorted(distribution), axes):
-            length_distribution = {}
-            for length in distribution[eos_id]:
-                if length not in length_distribution:
-                    length_distribution[length] = 0
-                length_distribution[length] += 1
-            axis.bar(length_distribution.keys(), length_distribution.values(), width=1)
-            axis.set_title(f'EOS #{eos_id}', fontsize=14)
-            axis.set_xlim([0, xlim])
-            axis.set_ylim([0, ylim])
-            axis.grid()
-
-    def draw_single_distribution_for_several_eos(self, model_id, distribution_name, update_step=-1, eos_ids=[],
-                                                 xlim=200, ylim=250):
-        model = self.models[model_id]
-        distribution = model[update_step][distribution_name]
-        plt.figure(figsize=(10, 8))
-        for eos_id in eos_ids:
-            length_distribution = {}
-            if eos_id not in distribution:
-                continue
-            for length in distribution[eos_id]:
-                if length not in length_distribution:
-                    length_distribution[length] = 0
-                length_distribution[length] += 1
-            plt.bar(length_distribution.keys(), length_distribution.values(), width=1, label=eos_id)
-        plt.xlim([0, xlim])
-        plt.ylim([0, ylim])
-        plt.legend()
-        plt.grid()
-
     def get_aggregated_bin_eosprobs(self, model, seq_agg, dataset_agg, mode, min_bin_samples, min_bin_size, max_length):
         rank_before_last_distr = {}
         rank_last_distr = {}
@@ -317,7 +230,6 @@ class StatsParserOversmoothing:
                     length_to_bounds_mapping[length] = len_bound
 
         count_lengths = {}
-        #import ipdb; ipdb.set_trace()
 
         for prev_ranks, last_rank, seq_len in zip(model[-1][f'{mode}_false_eos_probs'],
                                                      model[-1][f'{mode}_true_eos_probs'],
@@ -390,7 +302,6 @@ class StatsParserOversmoothing:
                     length_to_bounds_mapping[length] = len_bound
 
         count_lengths = {}
-        #import ipdb; ipdb.set_trace()
 
         for prev_ranks, last_rank, seq_len in zip(model[-1][f'{mode}_false_eos_ranks'],
                                                      model[-1][f'{mode}_true_eos_ranks'],
@@ -451,55 +362,11 @@ class StatsParserOversmoothing:
         return (mean_bin_lengths_before_last, aggregated_bin_values_before_last), \
                (mean_bin_lengths_last, aggregated_bin_values_last), bin_bounds
 
-    def draw_ranks(self, seq_agg='max', dataset_agg='avg', mode='target', min_bin_samples=200, min_bin_size=5, max_length=250,
-                   metrics=(('#EOS', 'number_eos_tokens'), ('ME', 'marginal_entropy_weight'), ('CE', 'conditional_entropy_weight')),
-                   model_ids=None, prob_or_rank='rank'):
-        if model_ids is None:
-            model_ids = [(i, False) for i in range(len(self.models))]
-
-        fig, axes = plt.subplots(2, 1, figsize=(20, 15))
-
-        for model_id, is_bold in model_ids:
-            line_width = 6.0 if is_bold else 1
-            model = self.models[model_id]
-            cfg = self.model_configs[model_id]
-            description = f'{model_id}, '
-            for metric_name, metric_id in metrics:
-                description += f'{metric_name}: {cfg[metric_id]}, '
-            description = description[:-2]
-            if prob_or_rank == 'rank':
-                (mean_bin_lengths_before_last, aggregated_bin_values_before_last), \
-                    (mean_bin_lengths_last, aggregated_bin_values_last), _ = self.get_aggregated_bin_ranks(model, seq_agg, dataset_agg, 
-                                                                                                        mode, min_bin_samples,
-                                                                                                        min_bin_size, max_length)
-            elif prob_or_rank == 'prob':
-                (mean_bin_lengths_before_last, aggregated_bin_values_before_last), \
-                    (mean_bin_lengths_last, aggregated_bin_values_last), _ = self.get_aggregated_bin_eosprobs(model, seq_agg, dataset_agg, 
-                                                                                                        mode, min_bin_samples,
-                                                                                                        min_bin_size, max_length)
-            else:
-                raise NotImplementedError
-                
-            axes[0].plot(mean_bin_lengths_before_last, aggregated_bin_values_before_last, label=description, marker="o",
-                         linewidth=line_width)
-            axes[1].plot(mean_bin_lengths_last, aggregated_bin_values_last, label=description, marker="o")
-        axes[0].grid()
-        axes[1].grid()
-        axes[0].set_xlabel(f'{mode} length', fontsize=14)
-        axes[1].set_xlabel(f'{mode} length', fontsize=14)
-        axes[0].set_ylabel(f'seq-agg={seq_agg} False EOS {prob_or_rank}', fontsize=14)
-        axes[1].set_ylabel(f'True EOS {prob_or_rank}', fontsize=14)
-        axes[0].legend(fontsize=12)
-        axes[1].legend(fontsize=12)
-
     def get_criteria_table(self, metrics, params, model_ids, seq_agg='avg', dataset_agg='avg', min_bin_samples=400, min_bin_size=10, max_length=250):
         style_border_right_solid = 'border-right: 1px solid;'
         style_border_right_solid_bold = 'border-right: 3px solid;'
         style_border_right_dotted = 'border-right: 1px dotted;'
         style_align_center = 'text-align: center;"'
-
-#        header_desc = [f'<td style="{style_border_right_solid}"></td>']
-#        subheader_desc = [f'<td style="{style_border_right_solid}"></td>']
 
         header_desc = []
         subheader_desc = []
@@ -581,106 +448,3 @@ class StatsParserOversmoothing:
             content += ['</tr>']
 
         table = f'<table style="{style_border_right_solid} font-size: 10pt">{header}{"".join(content)}</table>'
-        return table
-    
-    def get_ranks_distribution(self, params, min_bin_size=10, draw_plot=False):
-        vocab_size = self.models[0][-1]['vocab_size']
-       
-        mapping = {}
-        start = 0
-        for i in range(vocab_size + 1):
-            mapping[i] = start + min_bin_size / 2 
-            if i == start:
-                start += min_bin_size
-
-        selected_ids = self.filter_models({'self': self}, params)
-        bins = collections.OrderedDict()
-        for selected_id in selected_ids['self']:
-            model = self.models[selected_id]
-            config = self.model_configs[selected_id]
-            for i, ranks in enumerate(model[-1]['target_false_eos_ranks']):
-                for j, rank in enumerate(ranks):
-                    bounds_mean = mapping[rank]
-                    if bounds_mean not in bins:
-                        bins[bounds_mean] = 0
-                    bins[bounds_mean] += 1
-        
-        bins = collections.OrderedDict(sorted(bins.items()))
-
-        if draw_plot:
-            plt.figure(figsize=(15, 10))
-            plt.bar(list(bins.keys()), list(bins.values()), width=4)
-            plt.yscale('symlog')
-            plt.grid()
-            plt.show()
-        return bins
-
-    @staticmethod
-    def filter_models(parsers, params):
-        selected_ids = {}
-        for experiment, parser in parsers.items():
-            selected_ids[experiment] = []
-            for model_id, config in enumerate(parser.model_configs):
-                eq = 0
-                for param in params:
-                    if config[param] in params[param]:
-                        eq += 1
-                if eq == len(params):
-                    selected_ids[experiment] += [model_id]
-        return selected_ids
-
-    def get_soft_oversmoothing(self, minl=0, maxl=200, seq_type='target', beam=1000):
-        model_ids = np.arange(len(self.models))
-        suffix_soft_dicts = {}
-        for model_id in model_ids:
-            model_beam = self.model_configs[model_id]['beam']
-            if model_beam != beam:
-                continue
-            seed = self.model_configs[model_id]['seed']
-            model_neos = self.model_configs[model_id]['number_eos_tokens']
-            if model_neos not in suffix_soft_dicts:
-                suffix_soft_dicts[model_neos] = {}
-            suffix_soft_dicts[model_neos][seed] = self.get_suffix_dict(self.models[model_id], minl=minl, maxl=maxl, seq_type=seq_type)
-        return suffix_soft_dicts
-
-    def get_hard_oversmoothing(self, minl=0, maxl=200, seq_type='target', beam=1000):
-        model_ids = np.arange(len(self.models))
-        suffix_hard_dicts = {}
-        for model_id in model_ids:
-            model_beam = self.model_configs[model_id]['beam']
-            if model_beam != beam:
-                continue
-            seed = self.model_configs[model_id]['seed']
-            model_neos = self.model_configs[model_id]['number_eos_tokens']
-            if model_neos not in suffix_hard_dicts:
-                suffix_hard_dicts[model_neos] = {}
-            suffix_hard_dicts[model_neos][seed] = self.get_suffix_hard_dict(self.models[model_id], minl=minl, maxl=maxl, seq_type=seq_type)
-        return suffix_hard_dicts
-
-    def get_suffix_dict(self, pickle_dict, minl=0, maxl=1000, seq_type='target'):
-        suffix_length_to_list = defaultdict(list)
-        for seq_lprobs, seq_eos_probs in zip(pickle_dict[0][f'{seq_type}_model_lprobs'], pickle_dict[0][f'{seq_type}_false_eos_probs']):
-            if len(seq_lprobs) > maxl or len(seq_lprobs) < minl:
-                continue
-            for prefix_len in range(len(seq_lprobs)-1):
-                suffix_lprob = sum(seq_lprobs[prefix_len:])
-                full_seq_lprob = sum(seq_lprobs)
-                prefix_lprob = sum(seq_lprobs[:prefix_len])+math.log(seq_eos_probs[prefix_len])
-                suffix_length = len(seq_lprobs[prefix_len:])
-                suffix_length_to_list[suffix_length].append(seq_eos_probs[prefix_len] - math.exp(suffix_lprob))
-        return suffix_length_to_list
-
-    def get_suffix_hard_dict(self, pickle_dict, minl=0, maxl=1000, seq_type='target'):
-        suffix_length_to_list = defaultdict(list)
-        for seq_lprobs, seq_eos_probs in zip(pickle_dict[0][f'{seq_type}_model_lprobs'], pickle_dict[0][f'{seq_type}_false_eos_probs']):
-            if len(seq_lprobs) > maxl or len(seq_lprobs) < minl:
-                continue
-            for prefix_len in range(len(seq_lprobs)-1):
-                suffix_lprob = sum(seq_lprobs[prefix_len:])
-                full_seq_lprob = sum(seq_lprobs)
-                prefix_lprob = sum(seq_lprobs[:prefix_len])+math.log(seq_eos_probs[prefix_len])
-                suffix_length = len(seq_lprobs[prefix_len:])
-                suffix_length_to_list[suffix_length].append(float(seq_eos_probs[prefix_len] > math.exp(suffix_lprob)))
-        return suffix_length_to_list
-
-

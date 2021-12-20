@@ -22,14 +22,10 @@ params = {
 
 table_eos_quality_target = [
     ('bleu', 'BLEU'),
-    ('bleurt', 'BLEURT'),
     ('tb_ppl', 'PPL'),
     ('tb_nll_loss', 'NLL'),
-    ('abrupted', 'Abrupted'),
     ('tb_target/oversmoothing_rate', 'OS rate'),
     ('tb_target/oversmoothing_loss', 'OS loss'),
-    ('target_empty_winrate', 'Target Empty WR'),
-    ('generated_empty_winrate', 'Generated Empty WR'),
     ('target_generated_lenratio_mean', '|T|/|G| mean'),
     ('target_generated_lenratio_seq_mean', 'LR seq'),
     ('target_generated_lenratio_median', '|T|/|G| med'),

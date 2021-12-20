@@ -290,14 +290,6 @@ def train(
             "train_step-%d" % i
         ):
 
-            if task.not_validated and num_updates == 0:
-                #end_of_epoch = not itr.has_next()
-                #valid_losses, should_stop = validate_and_save(
-                #   cfg, trainer, task, epoch_itr, valid_subsets, end_of_epoch
-                #)
-                should_stop_early.best = None
-                #converter.reinitialize_eos_weights(trainer, trainer.model.decoder.value_reinitialization_type)
-
             log_output = trainer.train_step(samples)            
 
         if log_output is not None:  # not OOM, overflow, ...
@@ -401,13 +393,12 @@ def validate_and_save(
             and num_updates > 0
             and num_updates % cfg.dataset.validate_interval_updates == 0
         )
-    ) and not cfg.dataset.disable_validation or (num_updates == 0 and task.not_validated)
+    ) and not cfg.dataset.disable_validation
 
     # Validate
     valid_losses = [None]
     if do_validate:
         valid_losses = validate(cfg, trainer, task, epoch_itr, valid_subsets)
-        #task.reset_validation()
 
     should_stop |= should_stop_early(cfg, valid_losses[0])
 

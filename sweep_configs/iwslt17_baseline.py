@@ -7,121 +7,13 @@ import os
 import pickle
 from glob import glob
 
-from sweep_utils import get_static_paths, add_train_iwslt17_de_fr_zh_en, add_max_logit_policy_wentreg, all_vs_all_grid, compose_cmd_args, add_common_validation, add_common_generation
-
-def pretrain_iwslt17_pure_baseline(sweep_step, language):
-    experiment_name = f'pretrain_iwslt17_{language}_pure_baseline'
-
-    kv_opts = collections.OrderedDict()
-    kv_opts['--user-dir'] = get_static_paths('--user-dir', getpass.getuser())
-    kv_opts = add_train_iwslt17_de_fr_zh_en(kv_opts, language)
-    kv_opts = add_max_logit_policy_wentreg(kv_opts)
-
-    kv_opts['--criterion'] = 'label_smoothed_cross_entropy'
-    kv_opts['--arch'] = 'transformer_iwslt_de_en'
-    kv_opts['--task'] = 'translation'
-
-    kv_opts['--validate-interval-updates'] = '2000'
-    kv_opts['--best-checkpoint-metric'] = 'bleu'
-    kv_opts['--patience'] = 10
-    kv_opts['--maximize-best-checkpoint-metric']
-    del kv_opts['--validate-interval']
-
-    kv_opts['--eval-bleu-args'] = '\'{"beam": 10, "max_len_a": 1.2, "max_len_b": 10, "min_length": 0, "unnormalized": true}\''
-
-    kv_opts['--max-tokens'] = '4096'
-    kv_opts['--lr'] = '5e-4'  # we train for real now
-
-    # grid is defined here
-    grid = collections.OrderedDict()
-    grid['--seed'] = ['2421', '2804', '9361', '4872', '6765']
-
-    sweep_step_dict = all_vs_all_grid(grid)[sweep_step-1]
-
-    del kv_opts['--eos-choice']
-    del kv_opts['--marginal-entropy-weight']
-    del kv_opts['--conditional-entropy-weight']
-    del kv_opts['--user-dir']
-
-    for k,v in sweep_step_dict.items():
-        kv_opts[k] = v
-
-    save_dir = get_static_paths('savedir_absolute path', getpass.getuser())
-    save_dir = os.path.join(save_dir, experiment_name, f'sweep_step_{sweep_step}')
-    save_dir_tb = os.path.join(save_dir, 'tb')
-
-    kv_opts['--save-dir'] = save_dir
-    kv_opts['--tensorboard-logdir'] = save_dir_tb
-
-    # saving the args dict in save-dir
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-
-    cmd_args_filename = os.path.join(save_dir, experiment_name+f'_{sweep_step}'+'_args.pkl')
-    pickle.dump(kv_opts, open(cmd_args_filename, 'wb'))
-
-    return kv_opts
-    
-def pretrain_iwslt17_pure_baseline_nols_nllstop(sweep_step, language):
-    experiment_name = f'pretrain_iwslt17_pure_baseline_nols_nllstop_{language}'
-
-    kv_opts = collections.OrderedDict()
-    kv_opts = add_train_iwslt17_de_fr_zh_en(kv_opts, language)
-    kv_opts = add_max_logit_policy_wentreg(kv_opts)
-
-    kv_opts['--criterion'] = 'label_smoothed_cross_entropy'
-    kv_opts['--arch'] = 'transformer_iwslt_de_en'
-    kv_opts['--task'] = 'translation'
-
-    kv_opts['--validate-interval-updates'] = '2000'
-    kv_opts['--best-checkpoint-metric'] = 'nll_loss'
-    kv_opts['--patience'] = 5
-    del kv_opts['--validate-interval']
-
-    kv_opts['--max-tokens'] = '4096'
-    kv_opts['--lr'] = '5e-4'  # we train for real now
-
-    kv_opts['--label-smoothing'] = 0.0
-
-    del kv_opts['--eos-choice']
-    del kv_opts['--marginal-entropy-weight']
-    del kv_opts['--conditional-entropy-weight']
-    del kv_opts['--user-dir']
-    del kv_opts['--eval-bleu']
-    del kv_opts['--maximize-best-checkpoint-metric']
-    del kv_opts['--eval-bleu-args']
-
-    # grid is defined here
-    grid = collections.OrderedDict()
-    grid['--seed'] = ['2421', '2804', '9361', '4872', '6765']
-
-    sweep_step_dict = all_vs_all_grid(grid)[sweep_step-1]
-
-    for k,v in sweep_step_dict.items():
-        kv_opts[k] = v
-
-    save_dir = get_static_paths('savedir_absolute path', getpass.getuser())
-    save_dir = os.path.join(save_dir, experiment_name, f'sweep_step_{sweep_step}')
-    save_dir_tb = os.path.join(save_dir, 'tb')
-
-    kv_opts['--save-dir'] = save_dir
-    kv_opts['--tensorboard-logdir'] = save_dir_tb
-
-    # saving the args dict in save-dir
-    if not os.path.exists(save_dir):
-        os.makedirs(save_dir)
-
-    cmd_args_filename = os.path.join(save_dir, experiment_name+f'_{sweep_step}'+'_args.pkl')
-    pickle.dump(kv_opts, open(cmd_args_filename, 'wb'))
-
-    return kv_opts
+from sweep_utils import get_static_paths, add_train_iwslt17_de_fr_zh_oversmoothing,  all_vs_all_grid, compose_cmd_args, add_common_validation
 
 def pretrain_iwslt17_pure_baseline_nllstop(sweep_step, language):
     experiment_name = f'pretrain_iwslt17_pure_baseline_nllstop_{language}'
 
     kv_opts = collections.OrderedDict()
-    kv_opts = add_train_iwslt17_de_fr_zh_en(kv_opts, language)
-    kv_opts = add_max_logit_policy_wentreg(kv_opts)
+    kv_opts = add_train_iwslt17_de_fr_zh_oversmoothing(kv_opts, language)
 
     kv_opts['--criterion'] = 'label_smoothed_cross_entropy'
     kv_opts['--arch'] = 'transformer_iwslt_de_en'

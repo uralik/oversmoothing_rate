@@ -7,7 +7,7 @@ import os
 import pickle
 from glob import glob
 
-from sweep_utils import add_train_wmt19_ende_oversmoothing_finetunebig, add_train_wmt19_deen_oversmoothing_finetunebig, add_train_wmt19_oversmoothing_finetunebig, validate_trained_sweep, generate_trained_sweep, get_static_paths, add_max_logit_policy_wentreg, all_vs_all_grid, compose_cmd_args, add_common_validation
+from sweep_utils import add_train_wmt19_ende_oversmoothing_finetunebig, add_train_wmt19_deen_oversmoothing_finetunebig, add_train_wmt19_oversmoothing_finetunebig, validate_trained_sweep, get_static_paths, all_vs_all_grid, compose_cmd_args, add_common_validation
 
 def finetune_wmt19_ruen_osl(sweep_step):
     experiment_name = finetune_wmt19_ruen_osl.__name__
@@ -111,7 +111,7 @@ def finetune_wmt19_ende_osl(sweep_step):
     kv_opts['--best-checkpoint-metric'] = 'loss'
 
     grid = collections.OrderedDict()
-    grid['--seed'] = ['2421']
+    grid['--seed'] = ['2421', '2804', '9361', '4872', '6765']
     grid['--oversmoothing-margin'] = ['0.0001']
     grid['--oversmoothing-weight'] = ['0.00', '0.05', '0.10', '0.15', '0.20', '0.25', '0.30', '0.35', '0.40', '0.45', '0.50', '0.55', '0.60', '0.65', '0.70', '0.75', '0.80', '0.85', '0.90', '0.95', '1.00']
 

@@ -1,25 +1,72 @@
-# nmt_eos
+# Characterizing and addressing the issue of oversmoothing in neural autoregressive sequence modeling
 
-journal: https://hackmd.io/@yhHA_s_ZSzOr_a6yKdSwWg/SkLeZj7Nd/edit
+This repo contains code for the paper [Characterizing and addressing the issue of oversmoothing in neural autoregressive sequence modeling](https://arxiv.org/pdf/2112.08914.pdf)
 
-Preparing the data: 
+**Authors**: Ilia Kulikov, Maksim Eremeev
 
-https://github.com/pytorch/fairseq/tree/master/examples/translation#iwslt14-german-to-english-transformer
-
-Example usage:
-
-training:
+## Requirements
 
 ```
-python ./fairseq_module/train.py   data-bin/iwslt14.tokenized.de-en.eostask/  --task translation_eos   --arch transformer_iwslt14_deen_meos     --optimizer adam --adam-betas '(0.9, 0.98)' --clip-norm 0.0     --lr 5e-4 --lr-scheduler inverse_sqrt --warmup-updates 4000     --dropout 0.3 --weight-decay 0.0001     --criterion cross_entropy     --max-tokens 4096     --eval-bleu     --eval-bleu-args '{"beam": 10, "max_len_a": 1.2, "max_len_b": 10, "min_length": 0}'     --eval-bleu-detok moses     --eval-bleu-remove-bpe     --eval-bleu-print-samples     --best-checkpoint-metric bleu --maximize-best-checkpoint-metric --user-dir ./fairseq_module/ --number_eos_tokens 10 --save-dir ./debug/ --eos-choice max
+fairseq==1.0.0a0+1ef3d6a
+sacrebleu==2.0.0
+torch==1.10.0
+sacremoses==0.0.45
+numpy==1.19.5
+pandas==1.3.3
+matplotlib==3.4.3
 ```
 
-validation (python command wrapped in bash script):
+## Reproducing the results
 
+### Step 1. Data preparation
+
+We tested the proposed approach on the following datasets: IWSLT'17 {DE, FR, ZH}-EN, WMT'19 {RU, DE}-EN, WMT'19 EN-DE, WMT'16 EN-DE.
+You can find bash scripts for data preprocessing in the `/data` directory.
+
+### Step 2. Model training
+
+Model configurations we used during the experiments can be found in the `/sweep_configs` directory. Each file contains experiment setups for a specific dataset. In order to train the model use
+
+```bash
+python sweep_configs/CONFIG_SCRIPT --call_fn EXPERIMENT_NAME --sweep_step CONFIG_SERIAL_NUMBER (--language SOURCE_LANGUAGE) | xargs python fairseq_module/train.py
 ```
-bash validate_script.sh ./debug/
+
+You can find more examples in the `/slurm_files` directory. `--language` parameter only applies to IWSLT experiments.
+
+### Step 3. Model validation
+
+Custom validation script we use computes and stores all nessessary statistics in a pickle file. In the post-processing step we get those statistics prepared for visualization. To execute the validation procedure use
+
+```bash
+python sweep_configs/CONFIG_SCRIPT  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate EXPERIMENT_NAME --sweep_step CONFIG_SERIAL_NUMBER --beam BEAM_SIZE (--language SOURCE_LANGUAGE) | xargs fairseq_module/validate.py
 ```
 
-Notes:
+You can find more examples in the `/slurm_files` directory. `--language` parameter only applies to IWSLT experiments.
 
-* Extra criterion `cross_entropy_eos` replicates `cross_entropy` and dumps `task.train_batch_statistics` with some running statistics on every `train_step` which we may need for research.
+### Step 4. Collecting the results
+
+`/parsers` directory contains several tools that automatically process the validation pickles. 
+
+The following command executes the post-processing:
+
+```bash
+python parsers/process_extra_state_pickles.py -p EXPERIMENT_RESULTS_PATH -b BEAM_SIZE -o OUTPUT_DIRECTORY
+```
+
+You can find more examples by investigating `submit_jobs*` slurm files in the `/parsers` folder.
+
+### Step 5. Visualizing the result
+
+Execute `experiments.ipynb` notebook to render the plots that were used in the paper.
+
+
+## BibTex
+
+@misc{kulikov2021characterizing,
+      title={Characterizing and addressing the issue of oversmoothing in neural autoregressive sequence modeling}, 
+      author={Ilia Kulikov and Maksim Eremeev and Kyunghyun Cho},
+      year={2021},
+      eprint={2112.08914},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+} 

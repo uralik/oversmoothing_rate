@@ -1,14 +1,14 @@
 #!/bin/bash
-#SBATCH --job-name=nmt_eos
+#SBATCH --job-name=iwslt17de
 #SBATCH --open-mode=append
-#SBATCH --output=./slurm_output/%j_%x.out
-#SBATCH --error=./slurm_output/%j_%x.err
+#SBATCH --output=./slurm_output/%A_%a_%j_%x.out
+#SBATCH --error=./slurm_output/%A_%a_%j_%x.err
 #SBATCH --export=ALL
 #SBATCH --time=24:00:00
 #SBATCH --gres=gpu:rtx8000:1
 #SBATCH --mem=32G
 #SBATCH -c 4
-#SBATCH --array=41-105
+#SBATCH --array=1-105
 
 PYTHON_SWEEP_PATH=../sweep_configs/iwslt17_finetune_oversmoothing.py
 EXPERIMENT_NAME=finetune_iwslt17_oversmoothing_grid_label_smoothing

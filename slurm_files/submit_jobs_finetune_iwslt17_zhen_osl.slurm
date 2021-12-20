@@ -1,14 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=iwstl17zh
 #SBATCH --open-mode=append
-#SBATCH --output=../slurm_output/%A_%a_%j_%x.out
-#SBATCH --error=../slurm_output/%A_%a_%j_%x.out
+#SBATCH --output=./slurm_output/%A_%a_%j_%x.out
+#SBATCH --error=./slurm_output/%A_%a_%j_%x.err
 #SBATCH --export=ALL
 #SBATCH --time=24:00:00
 #SBATCH --gres=gpu:rtx8000:1
 #SBATCH --mem=32G
 #SBATCH -c 4
-#SBATCH --account=cds
 #SBATCH --array=22-105
 
 PYTHON_SWEEP_PATH=../sweep_configs/iwslt17_finetune_oversmoothing.py

@@ -35,33 +35,6 @@ def validate_trained_sweep(sweep_step, experiment_name_to_validate, beam, max_to
     return kv_opts
 
 
-def generate_trained_sweep(sweep_step, experiment_name_to_generate, beam, nbest, max_tokens=None):
-    experiment_name = f'generate_beam{beam}_nbest{nbest}'
-    pretrain_args_pkl_filename = os.path.join(get_static_paths('savedir_absolute path', getpass.getuser()), experiment_name_to_generate, f'sweep_step_{sweep_step}', experiment_name_to_generate+f'_{sweep_step}'+'_args.pkl')
-    args_from_trained_model = pickle.load(open(pretrain_args_pkl_filename, 'rb'))
-
-    kv_opts = collections.OrderedDict()
-    kv_opts = add_common_generation(kv_opts, args_from_trained_model)
-
-    kv_opts['--beam'] = beam
-    kv_opts['--nbest'] = nbest
-    kv_opts['--results-path'] = os.path.join(args_from_trained_model['--save-dir'], experiment_name)
-
-    if beam > 100:
-        kv_opts['--max-tokens'] = '512'
-
-    if max_tokens is not None:
-        kv_opts['--max-tokens'] = max_tokens
-
-    # saving the args dict in save-dir
-    if not os.path.exists(kv_opts['--results-path']):
-        os.makedirs(kv_opts['--results-path'], exist_ok=True)
-
-    cmd_args_filename = os.path.join(kv_opts['--results-path'], f'generate_{sweep_step}'+'_args.pkl')
-    pickle.dump(kv_opts, open(cmd_args_filename, 'wb'))
-
-    return kv_opts
-
 # amending opts for downstream task
 
 def add_common_validation(kv_opts: collections.OrderedDict, args_from_trained_model: collections.OrderedDict) -> collections.OrderedDict:
@@ -74,16 +47,6 @@ def add_common_validation(kv_opts: collections.OrderedDict, args_from_trained_mo
     kv_opts['--max-tokens'] = '2048'
     kv_opts['--valid-subset'] = 'valid'
 
-    return kv_opts
-
-def add_common_generation(kv_opts: collections.OrderedDict, args_from_trained_model: collections.OrderedDict) -> collections.OrderedDict:
-    kv_opts = add_common_validation(kv_opts, args_from_trained_model)
-    kv_opts['--gen-subset'] = 'valid'
-    kv_opts['--unnormalized'] = True
-    kv_opts['--remove-bpe'] = True
-    kv_opts['--post-process'] = True
-    kv_opts['--max-len-a'] = 1.2
-    kv_opts['--max-len-b'] = 10
     return kv_opts
 
 # user specific opts
@@ -108,200 +71,6 @@ def get_static_paths(key: str, username: str) -> str:
     return kv_opts[key][username]
 
 # task specific opts
-
-def add_train_iwslt14_deen(kv_opts: collections.OrderedDict) -> collections.OrderedDict:
-    kv_opts['data'] = os.path.join(get_static_paths('data', getpass.getuser()),'iwslt14.tokenized.de-en')
-    kv_opts['--task'] = 'translation_eos'
-    kv_opts['--user-dir'] = './fairseq_module/'
-    kv_opts['--optimizer'] = 'adam'
-    kv_opts['--adam-betas'] = '\'(0.9, 0.98)\''
-    kv_opts['--lr-scheduler'] = 'inverse_sqrt'
-    kv_opts['--warmup-updates'] = '4000'
-    kv_opts['--weight-decay'] = '0.0001'
-    kv_opts['--criterion'] = 'label_smoothed_cross_entropy_meos'
-    kv_opts['--max-tokens'] = '4096'
-    kv_opts['--arch'] = 'transformer_iwslt14_deen_meos'
-    kv_opts['--clip-norm'] = '0.0'
-    kv_opts['--lr'] = '5e-4'
-    kv_opts['--dropout'] = '0.3'
-    kv_opts['--eval-bleu'] = True
-    kv_opts['--eval-bleu-args'] = '\'{"beam": 10, "max_len_a": 1.2, "max_len_b": 10, "min_length": 0, "unnormalized": true}\''
-    kv_opts['--eval-bleu-detok'] = 'moses'
-    kv_opts['--eval-bleu-remove-bpe'] = True
-    kv_opts['--no-epoch-checkpoints'] = True
-    kv_opts['--best-checkpoint-metric'] = 'bleu'
-    kv_opts['--maximize-best-checkpoint-metric'] = True
-    kv_opts['--patience'] = '10'
-    kv_opts['--validate-interval'] = '5'  # more sparse 500 # fine grained 50
-
-    # label smoothing is turned on here
-    kv_opts['--label-smoothing'] = '0.1'
-
-    return kv_opts
-
-def add_train_iwslt17_de_fr_zh_en(kv_opts: collections.OrderedDict, language: str) -> collections.OrderedDict:
-    kv_opts['data'] = os.path.join(get_static_paths('data', getpass.getuser()), f'iwslt17.tokenized.{language}-en')
-    kv_opts['--task'] = 'translation_eos'
-    kv_opts['--user-dir'] = '../fairseq_module/'
-    kv_opts['--optimizer'] = 'adam'
-    kv_opts['--adam-betas'] = '\'(0.9, 0.98)\''
-    kv_opts['--lr-scheduler'] = 'inverse_sqrt'
-    kv_opts['--warmup-updates'] = '4000'
-    kv_opts['--weight-decay'] = '0.0001'
-    kv_opts['--criterion'] = 'label_smoothed_cross_entropy_meos'
-    kv_opts['--max-tokens'] = '4096'
-    kv_opts['--arch'] = 'transformer_iwslt14_deen_meos'
-    kv_opts['--clip-norm'] = '0.0'
-    kv_opts['--lr'] = '5e-4'
-    kv_opts['--dropout'] = '0.3'
-    kv_opts['--eval-bleu'] = True
-    kv_opts['--eval-bleu-args'] = '\'{"beam": 10, "max_len_a": 1.2, "max_len_b": 10, "min_length": 0, "unnormalized": true}\''
-    kv_opts['--eval-bleu-detok'] = 'moses'
-    kv_opts['--eval-bleu-remove-bpe'] = True
-    kv_opts['--no-epoch-checkpoints'] = True
-    kv_opts['--best-checkpoint-metric'] = 'bleu'
-    kv_opts['--maximize-best-checkpoint-metric'] = True
-    kv_opts['--patience'] = '10'
-    kv_opts['--validate-interval'] = '5'  # more sparse 500 # fine grained 50
-
-    # label smoothing is turned on here
-    kv_opts['--label-smoothing'] = '0.1'
-
-    return kv_opts
-
-
-# def add_train_wmt16_deen(kv_opts: collections.OrderedDict) -> collections.OrderedDict:
-#     kv_opts['data'] = os.path.join(get_static_paths('data', 'ik1147'),'wmt16_en_de_bpe32k')
-#     kv_opts['--task'] = 'translation_eos'
-#     kv_opts['--user-dir'] = './fairseq_module/'
-#     kv_opts['--optimizer'] = 'adam'
-#     kv_opts['--adam-betas'] = '\'(0.9, 0.98)\''
-#     kv_opts['--lr-scheduler'] = 'inverse_sqrt'
-#     kv_opts['--warmup-updates'] = '4000'
-#     kv_opts['--weight-decay'] = '0.0'
-#     kv_opts['--criterion'] = 'label_smoothed_cross_entropy'
-#     kv_opts['--max-tokens'] = '4096'
-#     kv_opts['--arch'] = 'transformer_vaswani_wmt_en_de_big_meos'
-#     kv_opts['--clip-norm'] = '0.0'
-#     kv_opts['--lr'] = '5e-4'
-#     kv_opts['--dropout'] = '0.3'
-#     kv_opts['--eval-bleu'] = True
-#     kv_opts['--eval-bleu-args'] = '\'{"beam": 10, "max_len_a": 1.2, "max_len_b": 10, "min_length": 0}\''
-#     kv_opts['--eval-bleu-detok'] = 'moses'
-#     kv_opts['--eval-bleu-remove-bpe'] = True
-#     kv_opts['--no-epoch-checkpoints'] = True
-#     kv_opts['--best-checkpoint-metric'] = 'bleu'
-#     kv_opts['--maximize-best-checkpoint-metric'] = True
-#     kv_opts['--patience'] = '10'
-#     kv_opts['--validate-interval'] = '5'  # more sparse 500 # fine grained 50
-#     kv_opts['--share-all-embeddings'] = True
-
-#     # label smoothing is turned on here
-#     kv_opts['--label-smoothing'] = '0.1'
-
-#     return kv_opts
-
-# def add_train_wmt16_scratch(kv_opts: collections.OrderedDict) -> collections.OrderedDict:
-#     kv_opts['data'] = os.path.join(get_static_paths('data', 'ik1147'),'wmt16_en_de_bpe32k')
-#     kv_opts['--task'] = 'translation_eos'
-#     kv_opts['--user-dir'] = './fairseq_module/'
-#     kv_opts['--optimizer'] = 'adam'
-#     kv_opts['--adam-betas'] = '\'(0.9, 0.98)\''
-#     kv_opts['--lr-scheduler'] = 'inverse_sqrt'
-#     kv_opts['--warmup-updates'] = '4000'
-#     kv_opts['--weight-decay'] = '0.0'
-#     kv_opts['--criterion'] = 'label_smoothed_cross_entropy'
-#     kv_opts['--max-tokens-valid'] = '4096'
-#     kv_opts['--max-tokens'] = '32768'
-#     kv_opts['--arch'] = 'transformer_wmt_meos'
-#     kv_opts['--clip-norm'] = '0.0'
-#     kv_opts['--lr'] = '5e-4'
-#     kv_opts['--dropout'] = '0.3'
-#     kv_opts['--no-epoch-checkpoints'] = True
-#     kv_opts['--best-checkpoint-metric'] = 'nll_loss'
-
-#     # label smoothing is turned on here
-#     kv_opts['--label-smoothing'] = '0.1'
-
-#     return kv_opts
-
-# def add_train_wmt19_scratch(kv_opts: collections.OrderedDict) -> collections.OrderedDict:
-#     kv_opts['data'] = '/scratch/ik1147/nmt_multiple_eos/wmt19_data/tokenized.ru-en_preprocessed'
-#     kv_opts['--task'] = 'translation_eos'
-#     kv_opts['--user-dir'] = '../fairseq_module/'
-#     kv_opts['--optimizer'] = 'adam'
-#     kv_opts['--adam-betas'] = '\'(0.9, 0.98)\''
-#     kv_opts['--lr-scheduler'] = 'inverse_sqrt'
-#     kv_opts['--warmup-updates'] = '4000'
-#     kv_opts['--weight-decay'] = '0.0'
-#     kv_opts['--criterion'] = 'label_smoothed_cross_entropy'
-#     kv_opts['--max-tokens-valid'] = '4096'
-#     kv_opts['--max-tokens'] = '4096'
-#     kv_opts['--arch'] = 'transformer_wmt_meos'
-#     kv_opts['--clip-norm'] = '0.0'
-#     kv_opts['--lr'] = '5e-4'
-#     kv_opts['--dropout'] = '0.3'
-#     kv_opts['--no-epoch-checkpoints'] = True
-#     kv_opts['--best-checkpoint-metric'] = 'nll_loss'
-
-#     # label smoothing is turned on here
-#     kv_opts['--label-smoothing'] = '0.1'
-
-#     return kv_opts
-
-# def add_finetune_wmt19_ruen(kv_opts: collections.OrderedDict) -> collections.OrderedDict:
-#     kv_opts['data'] = '/scratch/ik1147/nmt_multiple_eos/wmt19_data/tokenized.ru-en_preprocessed'
-#     kv_opts['--task'] = 'translation_eos'
-#     kv_opts['--optimizer'] = 'adam'
-#     kv_opts['--adam-betas'] = '\'(0.9, 0.98)\''
-#     kv_opts['--lr-scheduler'] = 'inverse_sqrt'
-#     kv_opts['--warmup-updates'] = '4000'
-#     kv_opts['--weight-decay'] = '0.0'
-#     kv_opts['--criterion'] = 'label_smoothed_cross_entropy'
-#     kv_opts['--label-smoothing'] = '0.1'
-#     kv_opts['--max-tokens'] = '3584'
-#     kv_opts['--arch'] = 'transformer_vaswani_wmt_en_de_big_meos'
-#     kv_opts['--encoder-ffn-embed-dim'] = '8192'
-#     kv_opts['--share-decoder-input-output-embed'] = True
-#     kv_opts['--warmup-updates'] = '1'
-#     kv_opts['--patience'] = '5'
-#     kv_opts['--validate-interval-updates'] = '5000'
-#     kv_opts['--clip-norm'] = '0.0'
-#     kv_opts['--lr'] = '5e-4'
-#     kv_opts['--dropout'] = '0.1'
-#     kv_opts['--eval-bleu'] = True
-#     kv_opts['--eval-bleu-args'] = '\'{"beam": 10, "max_len_a": 1.2, "max_len_b": 10, "min_length": 0}\''
-#     kv_opts['--eval-bleu-detok'] = 'moses'
-#     kv_opts['--eval-bleu-remove-bpe'] = True
-#     kv_opts['--no-epoch-checkpoints'] = True
-#     kv_opts['--best-checkpoint-metric'] = 'bleu'
-#     kv_opts['--maximize-best-checkpoint-metric'] = True
-#     kv_opts['--max-update'] = 200000
-
-#     return kv_opts
-
-def add_train_wmt19_oversmoothing_small(kv_opts: collections.OrderedDict) -> collections.OrderedDict:
-    kv_opts['data'] = '/scratch/ik1147/nmt_multiple_eos/wmt19_data/tokenized.ru-en_preprocessed'
-    kv_opts['--task'] = 'translation_oversmoothing'
-    kv_opts['--optimizer'] = 'adam'
-    kv_opts['--adam-betas'] = '\'(0.9, 0.98)\''
-    kv_opts['--lr-scheduler'] = 'inverse_sqrt'
-    kv_opts['--warmup-updates'] = '4000'
-    kv_opts['--weight-decay'] = '0.0'
-    kv_opts['--criterion'] = 'oversmoothing_loss'
-    kv_opts['--max-tokens-valid'] = '4096'
-    kv_opts['--max-tokens'] = '4096'
-    kv_opts['--arch'] = 'transformer_iwslt_de_en'
-    kv_opts['--clip-norm'] = '0.0'
-    kv_opts['--lr'] = '5e-4'
-    kv_opts['--dropout'] = '0.3'
-    kv_opts['--no-epoch-checkpoints'] = True
-    kv_opts['--best-checkpoint-metric'] = 'loss'
-
-    # label smoothing is turned on here
-    kv_opts['--label-smoothing'] = '0.1'
-
-    return kv_opts
 
 def add_train_wmt19_oversmoothing_finetunebig(kv_opts: collections.OrderedDict) -> collections.OrderedDict:
     kv_opts['data'] = '/scratch/ik1147/nmt_multiple_eos/wmt19_data/tokenized.ru-en_preprocessed'
@@ -424,15 +193,6 @@ def add_train_iwslt17_de_fr_zh_oversmoothing(kv_opts: collections.OrderedDict, l
     kv_opts['--dropout'] = '0.3'
     kv_opts['--no-epoch-checkpoints'] = True
     kv_opts['--best-checkpoint-metric'] = 'loss'
-
-    return kv_opts
-
-# method specific opts
-
-def add_max_logit_policy_wentreg(kv_opts: collections.OrderedDict) -> collections.OrderedDict:
-    kv_opts['--eos-choice'] = 'max'
-    kv_opts['--marginal-entropy-weight'] = '1.0'
-    kv_opts['--conditional-entropy-weight'] = '1.0'
 
     return kv_opts
 

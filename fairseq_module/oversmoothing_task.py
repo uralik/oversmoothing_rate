@@ -46,7 +46,6 @@ class OversmoothingTranslationTask(TranslationTask):
         self.extra_statistics = None
         self.initialize_extra_statistics()
         self.validation_epoch = False
-        self.not_validated = True
 
     def initialize_extra_statistics(self):
         """

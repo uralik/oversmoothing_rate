@@ -4,7 +4,7 @@
 #SBATCH --output=./slurm_output/%j_%x.out
 #SBATCH --error=./slurm_output/%j_%x.err
 #SBATCH --export=ALL
-#SBATCH --time=1:00:00
+#SBATCH --time=2:00:00
 #SBATCH --mem=180G
 #SBATCH -c 4
 #SBATCH --array=1,5,100,250,500,750,1000
