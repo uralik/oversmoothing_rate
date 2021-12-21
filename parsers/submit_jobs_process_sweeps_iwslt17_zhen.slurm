@@ -13,5 +13,5 @@ singularity exec --nv --overlay /scratch/mae9785/mae9785_overlay.ext3:ro /scratc
 source /ext3/env.sh
 conda activate nmt
 
-python process_extra_state_pickles.py -p /scratch/mae9785/nmt/finetune_iwslt17_oversmoothing_grid_label_smoothing_zh -b ${SLURM_ARRAY_TASK_ID} -o /scratch/mae9785/new_results
+python process_extra_state_pickles.py -p ${EXPERIMENTS_DIRECTORY_IWSLT}/finetune_iwslt17_oversmoothing_grid_label_smoothing_zh -b ${SLURM_ARRAY_TASK_ID} -o ${RESULTS_DIRECTORY}
 "

@@ -7,7 +7,7 @@ import os
 import pickle
 from glob import glob
 
-from sweep_utils import get_static_paths, add_train_iwslt17_de_fr_zh_oversmoothing,  all_vs_all_grid, compose_cmd_args, add_common_validation
+from sweep_utils import add_train_iwslt17_de_fr_zh_oversmoothing,  all_vs_all_grid, compose_cmd_args, add_common_validation
 
 def pretrain_iwslt17_pure_baseline_nllstop(sweep_step, language):
     experiment_name = f'pretrain_iwslt17_pure_baseline_nllstop_{language}'
@@ -46,7 +46,7 @@ def pretrain_iwslt17_pure_baseline_nllstop(sweep_step, language):
     for k,v in sweep_step_dict.items():
         kv_opts[k] = v
 
-    save_dir = get_static_paths('savedir_absolute path', getpass.getuser())
+    save_dir = os.environ.get('EXPERIMENTS_DIRECTORY_IWSLT')
     save_dir = os.path.join(save_dir, experiment_name, f'sweep_step_{sweep_step}')
     save_dir_tb = os.path.join(save_dir, 'tb')
 
@@ -65,13 +65,13 @@ def pretrain_iwslt17_pure_baseline_nllstop(sweep_step, language):
 def validate_trained_sweep_ontest(sweep_step, experiment_name_to_validate, beam, language):
     experiment_name = f'validate_beam{beam}_testset'
 
-    pretrain_args_pkl_filename = os.path.join(get_static_paths('savedir_absolute path', getpass.getuser()), f'{experiment_name_to_validate}_{language}', f'sweep_step_{sweep_step}', f'{experiment_name_to_validate}_{language}_{sweep_step}'+'_args.pkl')
+    pretrain_args_pkl_filename = os.path.join(os.environ.get('EXPERIMENTS_DIRECTORY_IWSLT'), f'{experiment_name_to_validate}_{language}', f'sweep_step_{sweep_step}', f'{experiment_name_to_validate}_{language}_{sweep_step}'+'_args.pkl')
     args_from_trained_model = pickle.load(open(pretrain_args_pkl_filename, 'rb'))
 
     kv_opts = collections.OrderedDict()
     kv_opts = add_common_validation(kv_opts, args_from_trained_model)
 
-    kv_opts['data'] = os.path.join(get_static_paths('data', getpass.getuser()), f'iwslt17.tokenized.{language}-en')
+    kv_opts['data'] = os.path.join(os.environ.get('DATA_IWSLT'), f'iwslt17.tokenized.{language}-en')
 
     kv_opts['--max-tokens'] = '256'
     kv_opts['--valid-subset'] = 'test'

@@ -7,16 +7,16 @@ import os
 import pickle
 from glob import glob
 
-from sweep_utils import add_train_wmt19_ende_oversmoothing_finetunebig, add_train_wmt19_deen_oversmoothing_finetunebig, add_train_wmt19_oversmoothing_finetunebig, validate_trained_sweep, get_static_paths, all_vs_all_grid, compose_cmd_args, add_common_validation
+from sweep_utils import add_train_wmt19_ende_oversmoothing_finetunebig, add_train_wmt19_deen_oversmoothing_finetunebig, add_train_wmt19_oversmoothing_finetunebig, validate_trained_sweep, all_vs_all_grid, compose_cmd_args, add_common_validation
 
 def finetune_wmt19_ruen_osl(sweep_step):
     experiment_name = finetune_wmt19_ruen_osl.__name__
 
     kv_opts = collections.OrderedDict()
-    kv_opts['--user-dir'] = get_static_paths('--user-dir', getpass.getuser())
+    kv_opts['--user-dir'] = os.environ.get('FAIRSEQ_MODULE')
     kv_opts = add_train_wmt19_oversmoothing_finetunebig(kv_opts)
 
-    save_dir = get_static_paths('savedir_absolute path', 'ik1147')
+    save_dir = os.environ.get('EXPERIMENTS_DIRECTORY_WMT')
     save_dir = os.path.join(save_dir, experiment_name, f'sweep_step_{sweep_step}')
     save_dir_tb = os.path.join(save_dir, 'tb')
 
@@ -53,10 +53,10 @@ def finetune_wmt19_deen_osl(sweep_step):
     experiment_name = finetune_wmt19_deen_osl.__name__
 
     kv_opts = collections.OrderedDict()
-    kv_opts['--user-dir'] = get_static_paths('--user-dir', getpass.getuser())
+    kv_opts['--user-dir'] = os.environ.get('FAIRSEQ_MODULE')
     kv_opts = add_train_wmt19_deen_oversmoothing_finetunebig(kv_opts)
 
-    save_dir = get_static_paths('savedir_absolute path', 'ik1147')
+    save_dir = os.environ.get('EXPERIMENTS_DIRECTORY_WMT')
     save_dir = os.path.join(save_dir, experiment_name, f'sweep_step_{sweep_step}')
     save_dir_tb = os.path.join(save_dir, 'tb')
 
@@ -93,10 +93,10 @@ def finetune_wmt19_ende_osl(sweep_step):
     experiment_name = finetune_wmt19_ende_osl.__name__
 
     kv_opts = collections.OrderedDict()
-    kv_opts['--user-dir'] = get_static_paths('--user-dir', getpass.getuser())
+    kv_opts['--user-dir'] = os.environ.get('FAIRSEQ_MODULE')
     kv_opts = add_train_wmt19_ende_oversmoothing_finetunebig(kv_opts)
 
-    save_dir = get_static_paths('savedir_absolute path', getpass.getuser())
+    save_dir = os.environ.get('EXPERIMENTS_DIRECTORY_WMT')
     save_dir = os.path.join(save_dir, experiment_name, f'sweep_step_{sweep_step}')
     save_dir_tb = os.path.join(save_dir, 'tb')
 
@@ -132,7 +132,7 @@ def finetune_wmt19_ende_osl(sweep_step):
 def validate_trained_sweep_ontest(sweep_step, experiment_name_to_validate, beam):
     experiment_name = f'validate_beam{beam}_testset'
 
-    pretrain_args_pkl_filename = os.path.join(get_static_paths('savedir_absolute path', 'ik1147'), experiment_name_to_validate, f'sweep_step_{sweep_step}', experiment_name_to_validate+f'_{sweep_step}'+'_args.pkl')
+    pretrain_args_pkl_filename = os.path.join(os.environ.get('EXPERIMENTS_DIRECTORY_WMT'), experiment_name_to_validate, f'sweep_step_{sweep_step}', experiment_name_to_validate+f'_{sweep_step}'+'_args.pkl')
     args_from_trained_model = pickle.load(open(pretrain_args_pkl_filename, 'rb'))
 
     kv_opts = collections.OrderedDict()
@@ -148,16 +148,16 @@ def validate_trained_sweep_ontest(sweep_step, experiment_name_to_validate, beam)
     kv_opts['--eval-bleu-remove-bpe'] = True
     kv_opts['--scoring'] = 'sacrebleu'
 
-    kv_opts['--stat-save-path'] = os.path.join(get_static_paths('savedir_absolute path', 'ik1147'), experiment_name_to_validate, f'sweep_step_{sweep_step}', experiment_name, 'best_extra_state.pkl')
+    kv_opts['--stat-save-path'] = os.path.join(os.environ.get('EXPERIMENTS_DIRECTORY_WMT'), experiment_name_to_validate, f'sweep_step_{sweep_step}', experiment_name, 'best_extra_state.pkl')
 
-    kv_opts['--path'] = os.path.join(get_static_paths('savedir_absolute path', 'ik1147'), experiment_name_to_validate, f'sweep_step_{sweep_step}', 'checkpoint_best.pt')
+    kv_opts['--path'] = os.path.join(os.environ.get('EXPERIMENTS_DIRECTORY_WMT'), experiment_name_to_validate, f'sweep_step_{sweep_step}', 'checkpoint_best.pt')
 
     del kv_opts['--max-tokens']
 
     if not os.path.exists(kv_opts['--stat-save-path']):
         os.makedirs(os.path.dirname(kv_opts['--stat-save-path']), exist_ok=True)
 
-    cmd_args_filename = os.path.join(get_static_paths('savedir_absolute path', 'ik1147'), experiment_name_to_validate, f'sweep_step_{sweep_step}', experiment_name, f'validate_{sweep_step}'+'_args.pkl')
+    cmd_args_filename = os.path.join(os.environ.get('EXPERIMENTS_DIRECTORY_WMT'), experiment_name_to_validate, f'sweep_step_{sweep_step}', experiment_name, f'validate_{sweep_step}'+'_args.pkl')
     pickle.dump(kv_opts, open(cmd_args_filename, 'wb'))
 
     return kv_opts

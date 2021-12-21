@@ -49,32 +49,11 @@ def add_common_validation(kv_opts: collections.OrderedDict, args_from_trained_mo
 
     return kv_opts
 
-# user specific opts
-
-def get_static_paths(key: str, username: str) -> str:
-    kv_opts = {
-        '--user-dir': {
-            'ik1147': '/scratch/ik1147/nmt_multiple_eos/nmt_eos/fairseq_module',
-            'mae9785': '/home/mae9785/ml2/eos/nmt_eos/fairseq_module'
-        },
-        'data': {
-            'ik1147': '/scratch/ik1147/public/fairseq_data_bin',
-            'mae9785': '/scratch/mae9785/iwslt17-data-bin',
-            'all': '/scratch/ik1147/public/wmt16'
-        },
-        'savedir_absolute path': {
-            'ik1147': '/scratch/ik1147/nmt_multiple_eos/nmt_eos',
-            'mae9785': '/scratch/mae9785/nmt'
-        }
-    }
-
-    return kv_opts[key][username]
-
 # task specific opts
 
 def add_train_wmt19_oversmoothing_finetunebig(kv_opts: collections.OrderedDict) -> collections.OrderedDict:
-    kv_opts['data'] = '/scratch/ik1147/nmt_multiple_eos/wmt19_data/tokenized.ru-en_preprocessed'
-    kv_opts['--finetune-from-model'] = '/scratch/ik1147/nmt_multiple_eos/wmt19_pretrained_models/wmt19.ru-en.ffn8192.pt'
+    kv_opts['data'] = os.path.join(os.environ.get('DATA_WMT19_RUEN'), 'tokenized.ru-en_preprocessed')
+    kv_opts['--finetune-from-model'] = os.environ.get('PRETRAINED_MODEL_WMT19_RUEN')
     kv_opts['--task'] = 'translation_oversmoothing'
     kv_opts['--optimizer'] = 'adam'
     kv_opts['--adam-betas'] = '\'(0.9, 0.98)\''
@@ -98,8 +77,8 @@ def add_train_wmt19_oversmoothing_finetunebig(kv_opts: collections.OrderedDict) 
     return kv_opts
 
 def add_train_wmt16_oversmoothing_finetunebig(kv_opts: collections.OrderedDict) -> collections.OrderedDict:
-    kv_opts['data'] = os.path.join(get_static_paths('data', 'ik1147'),'wmt16_en_de_bpe32k')
-    kv_opts['--finetune-from-model'] = '/scratch/ik1147/public/wmt16/wmt16.en-de.joined-dict.transformer/model.pt'
+    kv_opts['data'] = os.path.join(os.environ.get('DATA_WMT16_ENDE'),'wmt16_en_de_bpe32k')
+    kv_opts['--finetune-from-model'] = os.environ.get('PRETRAINED_MODEL_WMT16_ENDE')
     kv_opts['--task'] = 'translation_oversmoothing'
     kv_opts['--optimizer'] = 'adam'
     kv_opts['--adam-betas'] = '\'(0.9, 0.98)\''
@@ -124,8 +103,8 @@ def add_train_wmt16_oversmoothing_finetunebig(kv_opts: collections.OrderedDict) 
     return kv_opts
 
 def add_train_wmt19_deen_oversmoothing_finetunebig(kv_opts: collections.OrderedDict) -> collections.OrderedDict:
-    kv_opts['data'] = '/scratch/ik1147/nmt_multiple_eos/wmt19_deen_data/tokenized.de-en_preprocessed'
-    kv_opts['--finetune-from-model'] = '/scratch/ik1147/nmt_multiple_eos/wmt19_deen_pretrained_model/wmt19.de-en.ffn8192.pt'
+    kv_opts['data'] = os.path.join(os.environ.get('DATA_WMT19_DEEN'), 'tokenized.de-en_preprocessed')
+    kv_opts['--finetune-from-model'] = os.environ.get('PRETRAINED_MODEL_WMT19_DEEN')
     kv_opts['--task'] = 'translation_oversmoothing'
     kv_opts['--optimizer'] = 'adam'
     kv_opts['--adam-betas'] = '\'(0.9, 0.98)\''
@@ -149,8 +128,8 @@ def add_train_wmt19_deen_oversmoothing_finetunebig(kv_opts: collections.OrderedD
     return kv_opts
 
 def add_train_wmt19_ende_oversmoothing_finetunebig(kv_opts: collections.OrderedDict) -> collections.OrderedDict:
-    kv_opts['data'] = '/scratch/ik1147/nmt_multiple_eos/wmt19_ende_data/tokenized.en-de_preprocessed'
-    kv_opts['--finetune-from-model'] = '/scratch/ik1147/nmt_multiple_eos/wmt19_ende_pretrained_model/wmt19.en-de.ffn8192.pt'
+    kv_opts['data'] = os.path.join(os.environ.get('DATA_WMT19_ENDE'), 'tokenized.en-de_preprocessed')
+    kv_opts['--finetune-from-model'] = os.environ.get('PRETRAINED_MODEL_WMT19_ENDE')
     kv_opts['--task'] = 'translation_oversmoothing'
     kv_opts['--optimizer'] = 'adam'
     kv_opts['--adam-betas'] = '\'(0.9, 0.98)\''
@@ -174,7 +153,7 @@ def add_train_wmt19_ende_oversmoothing_finetunebig(kv_opts: collections.OrderedD
     return kv_opts
 
 def add_train_iwslt17_de_fr_zh_oversmoothing(kv_opts: collections.OrderedDict, language: str) -> collections.OrderedDict:
-    kv_opts['data'] = os.path.join(get_static_paths('data', getpass.getuser()), f'iwslt17.tokenized.{language}-en')
+    kv_opts['data'] = os.path.join(os.environ.get('DATA_IWSLT'), f'iwslt17.tokenized.{language}-en')
     kv_opts['--task'] = 'translation_oversmoothing'
     kv_opts['--optimizer'] = 'adam'
     kv_opts['--adam-betas'] = '\'(0.9, 0.98)\''

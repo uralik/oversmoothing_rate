@@ -14,7 +14,7 @@ PYTHON_SWEEP_PATH=./fairseq_module/iwslt17_baseline.py
 EXPERIMENT_NAME=pretrain_iwslt17_pure_baseline
 LANGUAGE=fr
 
-singularity exec --nv --overlay $SCRATCH/mae9785_overlay.ext3:ro /scratch/mae9785/cuda11.1-cudnn8-devel-ubuntu18.04.sif /bin/bash -c "
+singularity exec --nv --overlay $OVERLAY_PATH:ro $CUDA_SIF_PATH /bin/bash -c "
 source /ext3/env.sh
 conda activate nmt_eos
 

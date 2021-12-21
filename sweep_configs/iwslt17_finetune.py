@@ -7,13 +7,13 @@ import os
 import pickle
 from glob import glob
 
-from sweep_utils import validate_trained_sweep,  get_static_paths, add_train_iwslt17_de_fr_zh_oversmoothing, all_vs_all_grid, compose_cmd_args, add_common_validation
+from sweep_utils import validate_trained_sweep, add_train_iwslt17_de_fr_zh_oversmoothing, all_vs_all_grid, compose_cmd_args, add_common_validation
 
 def finetune_iwslt17_oversmoothing_grid_label_smoothing(sweep_step, language):
     experiment_name = f'finetune_iwslt17_oversmoothing_grid_label_smoothing_{language}'
 
     kv_opts = collections.OrderedDict()
-    kv_opts['--user-dir'] = get_static_paths('--user-dir', getpass.getuser())
+    kv_opts['--user-dir'] = os.environ.get('FAIRSEQ_MODULE')
     kv_opts = add_train_iwslt17_de_fr_zh_oversmoothing(kv_opts, language)
     
     seed_mapping = {
@@ -24,10 +24,10 @@ def finetune_iwslt17_oversmoothing_grid_label_smoothing(sweep_step, language):
         '6765': '5'
     }
 
-    kv_opts['data'] = f'/scratch/mae9785/iwslt17-data-bin/iwslt17.tokenized.{language}-en'
+    kv_opts['data'] = os.path.join(os.environ.get('DATA_IWSLT'), f'iwslt17.tokenized.{language}-en')
 
     # altering pretrain args to adjust for new experiment
-    save_dir = get_static_paths('savedir_absolute path', getpass.getuser())
+    save_dir = os.environ.get('EXPERIMENTS_DIRECTORY_IWSLT')
     save_dir = os.path.join(save_dir, experiment_name, f'sweep_step_{sweep_step}')
     save_dir_tb = os.path.join(save_dir, 'tb')
     kv_opts['--save-dir'] = save_dir
@@ -49,7 +49,7 @@ def finetune_iwslt17_oversmoothing_grid_label_smoothing(sweep_step, language):
     for k,v in sweep_step_dict.items():
         kv_opts[k] = v
 
-    kv_opts['--finetune-from-model'] = f'/scratch/mae9785/nmt/pretrain_iwslt17_{language}_pure_baseline/sweep_step_{seed_mapping[kv_opts["--seed"]]}/checkpoint_best.pt'
+    kv_opts['--finetune-from-model'] = os.path.join(os.environ.get('PRETRAINED_IWSLT_PATH'), f'pretrain_iwslt17_{language}_pure_baseline/sweep_step_{seed_mapping[kv_opts["--seed"]]}/checkpoint_best.pt')
 
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
@@ -62,13 +62,13 @@ def finetune_iwslt17_oversmoothing_grid_label_smoothing(sweep_step, language):
 def validate_trained_sweep_ontest(sweep_step, experiment_name_to_validate, beam, language):
     experiment_name = f'validate_beam{beam}_testset'
 
-    pretrain_args_pkl_filename = os.path.join(get_static_paths('savedir_absolute path', getpass.getuser()), f'{experiment_name_to_validate}_{language}', f'sweep_step_{sweep_step}', f'{experiment_name_to_validate}_{language}_{sweep_step}'+'_args.pkl')
+    pretrain_args_pkl_filename = os.path.join(os.environ.get('EXPERIMENTS_DIRECTORY_IWSLT'), f'{experiment_name_to_validate}_{language}', f'sweep_step_{sweep_step}', f'{experiment_name_to_validate}_{language}_{sweep_step}'+'_args.pkl')
     args_from_trained_model = pickle.load(open(pretrain_args_pkl_filename, 'rb'))
 
     kv_opts = collections.OrderedDict()
     kv_opts = add_common_validation(kv_opts, args_from_trained_model)
 
-    kv_opts['data'] = f'/scratch/mae9785/iwslt17-data-bin/iwslt17.tokenized.{language}-en'
+    kv_opts['data'] = os.path.join(os.environ.get('DATA_IWSLT'), f'iwslt17.tokenized.{language}-en')
 
     kv_opts['--max-tokens'] = '256'
     kv_opts['--valid-subset'] = 'test'

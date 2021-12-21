@@ -16,6 +16,33 @@ pandas==1.3.3
 matplotlib==3.4.3
 ```
 
+## Environment variables
+
+In order to utilize the scripts provided, one should set the following environment variables:
+
+```bash
+OVERLAY_PATH # only for singularity
+CUDA_SIF_PATH # only for singularity
+
+EXPERIMENTS_DIRECTORY_WMT
+EXPERIMENTS_DIRECTORY_IWSLT
+
+DATA_IWSTL
+DATA_WMT19_DEEN
+DATA_WMT19_RUEN
+DATA_WMT19_ENDE
+DATA_WMT16_ENDE
+
+PRETRAINED_MODEL_WMT19_DEEN
+PRETRAINED_MODEL_WMT19_RUEN
+PRETRAINED_MODEL_WMT19_ENDE
+PRETRAINED_MODEL_WMT16_ENDE
+
+FAIRSEQ_MODULE
+
+RESULTS_DIRECTORY
+```
+
 ## Installing fairseq
 
 Please use the fairseq with the following commit to avoid issues with updated codebase:

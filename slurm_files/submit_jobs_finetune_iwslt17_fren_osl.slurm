@@ -15,7 +15,7 @@ EXPERIMENT_NAME=finetune_iwslt17_oversmoothing_grid_label_smoothing
 LANGUAGE=fr
 FAIRSEQ_MODULE=../fairseq_module
 
-singularity exec --nv --overlay $SCRATCH/mae9785_overlay.ext3:ro /scratch/mae9785/cuda11.1-cudnn8-devel-ubuntu18.04.sif /bin/bash -c "
+singularity exec --nv --overlay $OVERLAY_PATH:ro $CUDA_SIF_PATH /bin/bash -c "
 source /ext3/env.sh
 conda activate nmt
 

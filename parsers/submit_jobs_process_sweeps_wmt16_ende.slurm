@@ -13,5 +13,5 @@ singularity exec --nv --overlay $OVERLAY_PATH:ro $CUDA_SIF_PATH /bin/bash -c "
 source /ext3/env.sh
 conda activate nmt
 
-python process_extra_state_pickles.py -p ${EXPERIMENTS_DIRECTORY}/finetune_wmt16_ende_osl -b ${SLURM_ARRAY_TASK_ID} -o ${RESULTS_DIRECTORY}
+python process_extra_state_pickles.py -p ${EXPERIMENTS_DIRECTORY_WMT}/finetune_wmt16_ende_osl -b ${SLURM_ARRAY_TASK_ID} -o ${RESULTS_DIRECTORY}
 "

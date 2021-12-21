@@ -8,18 +8,18 @@
 #SBATCH --gres=gpu:rtx8000:1
 #SBATCH --mem=32G
 #SBATCH -c 4
-#SBATCH --array=22-105
+#SBATCH --array=1-105
 
 PYTHON_SWEEP_PATH=../sweep_configs/iwslt17_finetune_oversmoothing.py
 EXPERIMENT_NAME=finetune_iwslt17_oversmoothing_grid_label_smoothing
 LANGUAGE=zh
 FAIRSEQ_MODULE=../fairseq_module
 
-singularity exec --nv --overlay $SCRATCH/ik1147_overlay.ext3:ro /scratch/ik1147/cuda11.1-cudnn8-devel-ubuntu18.04.sif /bin/bash -c "
+singularity exec --nv --overlay $OVERLAY_PATH:ro $CUDA_SIF_PATH /bin/bash -c "
 source /ext3/env.sh
 conda activate nmt_eos
 
-#python  ${PYTHON_SWEEP_PATH} --call_fn ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --language ${LANGUAGE} | xargs python ${FAIRSEQ_MODULE}/train.py
+python  ${PYTHON_SWEEP_PATH} --call_fn ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --language ${LANGUAGE} | xargs python ${FAIRSEQ_MODULE}/train.py
 
 python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 5 --language ${LANGUAGE} | xargs python ${FAIRSEQ_MODULE}/validate.py
 
