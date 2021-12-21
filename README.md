@@ -62,6 +62,7 @@ Execute `experiments.ipynb` notebook to render the plots that were used in the p
 
 ## BibTex
 
+```
 @misc{kulikov2021characterizing,
       title={Characterizing and addressing the issue of oversmoothing in neural autoregressive sequence modeling}, 
       author={Ilia Kulikov and Maksim Eremeev and Kyunghyun Cho},
@@ -69,4 +70,5 @@ Execute `experiments.ipynb` notebook to render the plots that were used in the p
       eprint={2112.08914},
       archivePrefix={arXiv},
       primaryClass={cs.LG}
-} 
+}
+```

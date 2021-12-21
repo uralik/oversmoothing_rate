@@ -43,7 +43,6 @@ class StatsParserOversmoothing:
         self.load_results()
         self.preprocess_metrics()
         self.compute_mean_eos_rank_globally()
-        self.compute_length_ratio()
         
     def load_results(self):
         if isinstance(self.experiments_directory, list):
@@ -116,7 +115,6 @@ class StatsParserOversmoothing:
         lr_seq = []
         for tl_seq, gl_seq in zip(tl, gl):
             lr_seq += [tl_seq / gl_seq]
-        self.length_ratios[model_id] = lr_seq
         return tl.sum() / gl.sum()
 
     def __recalculate_len_ratio_seq(self, update, model_id): # update stands for self.models[model_id][-1]
@@ -125,7 +123,7 @@ class StatsParserOversmoothing:
         lr_seq = []
         for tl_seq, gl_seq in zip(tl, gl):
             lr_seq += [tl_seq / gl_seq]
-        return np.mean(lr_seq)
+        return np.mean(lr_seq), np.median(lr_seq)
            
     def compute_bleu(self, update):
         beam_all_hyps = update['generated_hyps_text']
@@ -138,7 +136,9 @@ class StatsParserOversmoothing:
             for update in model:
                 update['bleu'] = self.compute_bleu(update)
                 update['target_generated_lenratio_mean'] = self.__recalculate_len_ratio(update, i)
-                update['target_generated_lenratio_seq_mean'] = self.__recalculate_len_ratio_seq(update, i)
+                lr_seq_mean, lr_seq_median = self.__recalculate_len_ratio_seq(update, i)
+                update['target_generated_lenratio_seq_mean'] = lr_seq_mean
+                update['target_generated_lenratio_median'] = lr_seq_median
                 for seq_type in ['target']:
                     update[f'{seq_type}_nonterminal_ll'] = self.__calculate_nonterminal_ll(update, seq_type, model_id=i)
                     update[f'{seq_type}_terminal_ll'] = self.__calculate_terminal_ll(update, seq_type)
@@ -448,3 +448,5 @@ class StatsParserOversmoothing:
             content += ['</tr>']
 
         table = f'<table style="{style_border_right_solid} font-size: 10pt">{header}{"".join(content)}</table>'
+        return table
+

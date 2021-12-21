@@ -1,5 +1,4 @@
 from parse_sweep_results_oversmoothing import StatsParserOversmoothing
-from translations_parser import TranslationParser
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
@@ -39,12 +38,8 @@ table_eos_quality_target = [
     ('std_generated_true_eos_r', 'G True EOS R std'),
     ('target_terminal_ll', 'T Term LL'),
     ('target_nonterminal_ll', 'T NTerm LL'),
-    ('generated_terminal_ll', 'G Term LL'),
-    ('generated_nonterminal_ll', 'G Nterm LL'),
     ('target_terminal_ll_mean', 'T Term LL Avg'),
     ('target_nonterminal_ll_mean', 'T NTerm LL Avg'),
-    ('generated_terminal_ll_mean', 'G Term LL Avg'),
-    ('generated_nonterminal_ll_mean', 'G Nterm LL Avg'),
 ]
 
 parser_params = {
@@ -87,7 +82,7 @@ class ParserWrapper:
                     selected_ids[experiment] += [model_id]
         return selected_ids
 
-    def generate_csv_results(self, target=False):
+    def generate_csv_results(self):
         selected_ids = self.filter_models({'oversmoothing_margin': [0.0001]})
         html = self.parsers['exp'].get_criteria_table(table_eos_quality_target, params, selected_ids['exp'])
     
@@ -96,10 +91,7 @@ class ParserWrapper:
         results = pd.DataFrame(results)
         results['beam'] = results['beam'].astype(int)
         results['seed'] = results['seed'].astype(int)
-        if target:
-            results.to_csv(f'{self.output}/{self.exp_name}/metrics_{self.exp_name}.csv')
-        else:
-            results.to_csv(f'{self.output}/{self.exp_name}/metrics_{self.exp_name}_beam{self.beam}.csv')
+        results.to_csv(f'{self.output}/{self.exp_name}/metrics_{self.exp_name}_beam{self.beam}.csv')
 
 
 if __name__ == '__main__':
@@ -110,5 +102,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     pw = ParserWrapper(path=args.path, beam=args.beam, output=args.output)
-    pw.generate_csv_results(target=args.target)
+    pw.generate_csv_results()
 
