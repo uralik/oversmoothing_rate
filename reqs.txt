@@ -1,0 +1,6 @@
+sacrebleu==2.0.0
+torch==1.10.0
+sacremoses==0.0.45
+numpy==1.19.5
+pandas
+matplotlib

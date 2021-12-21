@@ -16,12 +16,35 @@ pandas==1.3.3
 matplotlib==3.4.3
 ```
 
-## Reproducing the results
+## Installing fairseq
+
+Please use the fairseq with the following commit to avoid issues with updated codebase:
+
+`git clone https://github.com/pytorch/fairseq.git`
+
+`git checkout c6006678261bf5d52e2c744508b5ddd306cafebd`
+
+Install fairseq:
+
+```
+cd fairseq
+pip install --editable ./
+```
+
+## Running experiments from the paper
+
+### Downloading prertained checkpoints for WMT tasks
+
+TODO
 
 ### Step 1. Data preparation
 
 We tested the proposed approach on the following datasets: IWSLT'17 {DE, FR, ZH}-EN, WMT'19 {RU, DE}-EN, WMT'19 EN-DE, WMT'16 EN-DE.
-You can find bash scripts for data preprocessing in the `/data` directory.
+You can find bash scripts for data preprocessing in the `./data` directory.
+
+At the time of publication of this work the google drive link to WMT16 En-De preprocessed data became invalid.
+
+Please note: the BPE codes for WMT tasks come with the pretrained checkpoints. Please download checkpoints first.
 
 ### Step 2. Model training
 
@@ -32,6 +55,7 @@ python sweep_configs/CONFIG_SCRIPT --call_fn EXPERIMENT_NAME --sweep_step CONFIG
 ```
 
 You can find more examples in the `/slurm_files` directory. `--language` parameter only applies to IWSLT experiments.
+
 
 ### Step 3. Model validation
 
