@@ -2,45 +2,39 @@
 
 This repo contains code for the paper [Characterizing and addressing the issue of oversmoothing in neural autoregressive sequence modeling](https://arxiv.org/pdf/2112.08914.pdf)
 
-**Authors**: Ilia Kulikov, Maksim Eremeev
+**Authors**: Ilia Kulikov, Maksim Eremeev, Kyunghyun Cho
+
+![Oversmoothing rate plot](/oversmoothing_rate.png)
 
 ## Requirements
 
-```
-fairseq==1.0.0a0+1ef3d6a
-sacrebleu==2.0.0
-torch==1.10.0
-sacremoses==0.0.45
-numpy==1.19.5
-pandas==1.3.3
-matplotlib==3.4.3
-```
+See the reqs.txt
 
 ## Environment variables
 
 In order to utilize the scripts provided, one should set the following environment variables:
 
 ```bash
-OVERLAY_PATH # only for singularity
-CUDA_SIF_PATH # only for singularity
+export OVERLAY_PATH= # only for SLURM + singularity
+export CUDA_SIF_PATH= # only for SLURM + singularity
 
-EXPERIMENTS_DIRECTORY_WMT
-EXPERIMENTS_DIRECTORY_IWSLT
+export EXPERIMENTS_DIRECTORY_WMT=
+export EXPERIMENTS_DIRECTORY_IWSLT=
 
-DATA_IWSTL
-DATA_WMT19_DEEN
-DATA_WMT19_RUEN
-DATA_WMT19_ENDE
-DATA_WMT16_ENDE
+export DATA_IWSTL=
+export DATA_WMT19_DEEN=
+export DATA_WMT19_RUEN=
+export DATA_WMT19_ENDE=
+export DATA_WMT16_ENDE=
 
-PRETRAINED_MODEL_WMT19_DEEN
-PRETRAINED_MODEL_WMT19_RUEN
-PRETRAINED_MODEL_WMT19_ENDE
-PRETRAINED_MODEL_WMT16_ENDE
+export PRETRAINED_MODEL_WMT19_DEEN=
+export PRETRAINED_MODEL_WMT19_RUEN=
+export PRETRAINED_MODEL_WMT19_ENDE=
+export PRETRAINED_MODEL_WMT16_ENDE=
 
-FAIRSEQ_MODULE
+export FAIRSEQ_MODULE=
 
-RESULTS_DIRECTORY
+export RESULTS_DIRECTORY=
 ```
 
 ## Installing fairseq
@@ -60,18 +54,32 @@ pip install --editable ./
 
 ## Running experiments from the paper
 
+We use SLURM manager to run all experiments in this work. We use Nvidia RTX8000 gpus to train and validate models. We provide slurm scripts which use singularity containers, each of them has such block:
+
+```
+python  ${PYTHON_SWEEP_PATH} --call_fn ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --language ${LANGUAGE} | xargs python ${FAIRSEQ_MODULE}/train.py
+```
+
+Where the first python command calls the slurm sweep factory which generates command line arguments. These arguments are then fed into the fairseq process. If you do not use slurm or singularity, then you can directly use these commands.
+
 ### Downloading prertained checkpoints for WMT tasks
 
-TODO
+WMT16 En-De: https://github.com/pytorch/fairseq/tree/main/examples/scaling_nmt#pre-trained-models
+
+WMT19 Models (single models before fine-tuning): https://github.com/pytorch/fairseq/tree/main/examples/wmt19#pre-trained-single-models-before-finetuning 
+
+Note that dict files and bpe codes from WMt19 models are used as part of data preparation scripts later.
 
 ### Step 1. Data preparation
 
 We tested the proposed approach on the following datasets: IWSLT'17 {DE, FR, ZH}-EN, WMT'19 {RU, DE}-EN, WMT'19 EN-DE, WMT'16 EN-DE.
-You can find bash scripts for data preprocessing in the `./data` directory.
+You can find bash scripts for data preprocessing in the `/data` directory.
 
-At the time of publication of this work the google drive link to WMT16 En-De preprocessed data became invalid.
+At the time of publication of this work the google drive link to WMT16 En-De preprocessed data from Google became invalid.
 
 Please note: the BPE codes for WMT tasks come with the pretrained checkpoints. Please download checkpoints first.
+
+**fairseq preprocessing**: we use preprocessing command from fairseq which takes in the dictionary files in case of WMT tasks where pretrained checkpoints come with corresponding dictionaries.
 
 ### Step 2. Model training
 
@@ -81,18 +89,17 @@ Model configurations we used during the experiments can be found in the `/sweep_
 python sweep_configs/CONFIG_SCRIPT --call_fn EXPERIMENT_NAME --sweep_step CONFIG_SERIAL_NUMBER (--language SOURCE_LANGUAGE) | xargs python fairseq_module/train.py
 ```
 
-You can find more examples in the `/slurm_files` directory. `--language` parameter only applies to IWSLT experiments.
-
+You can find more examples in the `/slurm_files` directory. Note that `--language` parameter only applies to IWSLT experiments. `CONFIG_SERIAL_NUMBER` defines the step which maps to a specific configuration to run.
 
 ### Step 3. Model validation
 
-Custom validation script we use computes and stores all nessessary statistics in a pickle file. In the post-processing step we get those statistics prepared for visualization. To execute the validation procedure use
+We prepared custom validation script to compute and store all nessessary statistics in a pickle file. In the post-processing step we parse these files to compuite average statistics across training runs. To run the validation, execute the following command:
 
 ```bash
 python sweep_configs/CONFIG_SCRIPT  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate EXPERIMENT_NAME --sweep_step CONFIG_SERIAL_NUMBER --beam BEAM_SIZE (--language SOURCE_LANGUAGE) | xargs fairseq_module/validate.py
 ```
 
-You can find more examples in the `/slurm_files` directory. `--language` parameter only applies to IWSLT experiments.
+You can find more examples in the `/slurm_files` directory. Note that `--language` parameter only applies to IWSLT experiments.
 
 ### Step 4. Collecting the results
 
@@ -104,14 +111,16 @@ The following command executes the post-processing:
 python parsers/process_extra_state_pickles.py -p EXPERIMENT_RESULTS_PATH -b BEAM_SIZE -o OUTPUT_DIRECTORY
 ```
 
-You can find more examples by investigating `submit_jobs*` slurm files in the `/parsers` folder.
+You can find more examples by looking at `/parsers/submit_jobs*` slurm files..
 
 ### Step 5. Visualizing the result
 
-Execute `experiments.ipynb` notebook to render the plots that were used in the paper.
+Run `/experiments.ipynb` notebook to render the plots that are used in the paper.
 
 
 ## BibTex
+
+If you want to cite our work, please use the following bib:
 
 ```
 @misc{kulikov2021characterizing,
