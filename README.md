@@ -1,6 +1,6 @@
 # Characterizing and addressing the issue of oversmoothing in neural autoregressive sequence modeling
 
-This repo contains code for the paper [Characterizing and addressing the issue of oversmoothing in neural autoregressive sequence modeling](https://arxiv.org/pdf/2112.08914.pdf)
+This repo contains code for the paper [Characterizing and addressing the issue of oversmoothing in neural autoregressive sequence modeling](https://arxiv.org/abs/2112.08914)
 
 **Authors**: Ilia Kulikov, Maksim Eremeev, Kyunghyun Cho
 
