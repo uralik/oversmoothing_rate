@@ -135,26 +135,6 @@ def main(cfg: FairseqConfig) -> None:
         )
     )
 
-    # Load the latest checkpoint if one is available and restore the
-    # corresponding train iterator
-    # pretrained_checkpoint_file = cfg.checkpoint.finetune_from_model
-    # checkpoint_file = f'{cfg.checkpoint.save_dir}/{cfg.checkpoint.restore_file}' 
-    # if pretrained_checkpoint_file:
-    #     pretrained_checkpoint_file_fixed = f'{pretrained_checkpoint_file.split(".pt")[0]}_{uuid.uuid4().hex[0:6]}.pt'
-    # if pretrained_checkpoint_file is not None and os.path.exists(pretrained_checkpoint_file) and not os.path.exists(checkpoint_file):
-    #     is_meos = converter.check_checkpoint(pretrained_checkpoint_file)
-    #     if not is_meos:
-    #         logger.info('The given checkpoint is incompatible with MEOS model, converting...')
-    #         num_eos_tokens = cfg.model.number_eos_tokens
-    #         seed = cfg.common.seed
-    #         converter.convert_checkpoint(checkpoint_file=pretrained_checkpoint_file,
-    #                                      num_eos_tokens=num_eos_tokens,
-    #                                      seed=seed,
-    #                                      save_path=pretrained_checkpoint_file_fixed,
-    #                                      copy_original_eos_vector=False,
-    #                                      policy='key_value')
-    #         cfg.checkpoint.finetune_from_model = pretrained_checkpoint_file_fixed
-
     extra_state, epoch_itr = checkpoint_utils.load_checkpoint(
         cfg.checkpoint,
         trainer,
