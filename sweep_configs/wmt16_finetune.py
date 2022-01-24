@@ -7,7 +7,7 @@ import os
 import pickle
 from glob import glob
 
-from sweep_utils import add_train_wmt16_oversmoothing_finetunebig, validate_trained_sweep, all_vs_all_grid, compose_cmd_args, add_common_validation
+from sweep_utils import add_train_wmt16_oversmoothing_finetunebig, all_vs_all_grid, compose_cmd_args, add_common_validation
 
 def finetune_wmt16_ende_osl(sweep_step):
     experiment_name = finetune_wmt16_ende_osl.__name__
