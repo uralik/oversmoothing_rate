@@ -8,38 +8,11 @@ import getpass
 import datetime
 import os
 
-def validate_trained_sweep(sweep_step, experiment_name_to_validate, beam, max_tokens=None):
-    experiment_name = f'validate_beam{beam}'
-
-    pretrain_args_pkl_filename = os.path.join(get_static_paths('savedir_absolute path', getpass.getuser()), experiment_name_to_validate, f'sweep_step_{sweep_step}', experiment_name_to_validate+f'_{sweep_step}'+'_args.pkl')
-    args_from_trained_model = pickle.load(open(pretrain_args_pkl_filename, 'rb'))
-
-    kv_opts = collections.OrderedDict()
-    kv_opts = add_common_validation(kv_opts, args_from_trained_model)
-
-    kv_opts['--eval-bleu-args'] = '\'{"beam": %d, "max_len_a": 1.2, "max_len_b": 10, "min_length": 0, "unnormalized": true}\'' % beam
-    kv_opts['--stat-save-path'] = os.path.join(args_from_trained_model['--save-dir'], experiment_name, 'best_extra_state.pkl')
-
-    if beam > 100:
-        kv_opts['--max-tokens'] = '512'
-
-    if max_tokens is not None:
-        kv_opts['--max-tokens'] = max_tokens
-
-    if not os.path.exists(kv_opts['--stat-save-path']):
-        os.makedirs(os.path.dirname(kv_opts['--stat-save-path']), exist_ok=True)
-
-    cmd_args_filename = os.path.join(args_from_trained_model['--save-dir'], experiment_name, f'validate_{sweep_step}'+'_args.pkl')
-    pickle.dump(kv_opts, open(cmd_args_filename, 'wb'))
-
-    return kv_opts
-
-
 # amending opts for downstream task
 
 def add_common_validation(kv_opts: collections.OrderedDict, args_from_trained_model: collections.OrderedDict) -> collections.OrderedDict:
     kv_opts['data'] = args_from_trained_model['data']
-    kv_opts['--user-dir'] = get_static_paths('--user-dir', getpass.getuser())
+    kv_opts['--user-dir'] = os.environ.get('FAIRSEQ_MODULE')
     kv_opts['--task'] = args_from_trained_model['--task']
     kv_opts['--path'] = os.path.join(args_from_trained_model['--save-dir'], 'checkpoint_best.pt')
     if '--eval-bleu-args' in args_from_trained_model:
