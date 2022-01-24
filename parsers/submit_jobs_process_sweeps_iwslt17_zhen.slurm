@@ -9,7 +9,7 @@
 #SBATCH -c 4
 #SBATCH --array=1,5,100,250,500,750,1000
 
-singularity exec --nv --overlay /scratch/mae9785/mae9785_overlay.ext3:ro /scratch/mae9785/cuda11.1-cudnn8-devel-ubuntu18.04.sif /bin/bash -c "
+singularity exec --nv --overlay $OVERLAY_PATH:ro $CUDA_SIF_PATH /bin/bash -c "
 source /ext3/env.sh
 conda activate nmt
 
