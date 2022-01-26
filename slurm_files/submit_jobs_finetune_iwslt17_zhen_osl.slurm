@@ -10,7 +10,7 @@
 #SBATCH -c 4
 #SBATCH --array=1-105
 
-PYTHON_SWEEP_PATH=../sweep_configs/iwslt17_finetune_oversmoothing.py
+PYTHON_SWEEP_PATH=../sweep_configs/iwslt17_finetune.py
 EXPERIMENT_NAME=finetune_iwslt17_oversmoothing_grid_label_smoothing
 LANGUAGE=zh
 FAIRSEQ_MODULE=../fairseq_module
@@ -21,9 +21,9 @@ conda activate nmt_eos
 
 python  ${PYTHON_SWEEP_PATH} --call_fn ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --language ${LANGUAGE} | xargs python ${FAIRSEQ_MODULE}/train.py
 
-python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 5 --language ${LANGUAGE} | xargs python ${FAIRSEQ_MODULE}/validate.py
+python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 1 --language ${LANGUAGE} | xargs python ${FAIRSEQ_MODULE}/validate.py
 
-python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 1000 --language ${LANGUAGE} | xargs python ${FAIRSEQ_MODULE}/validate.py
+python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 5 --language ${LANGUAGE} | xargs python ${FAIRSEQ_MODULE}/validate.py
 
 python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 100 --language ${LANGUAGE} | xargs python ${FAIRSEQ_MODULE}/validate.py
 
@@ -33,5 +33,5 @@ python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experimen
 
 python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 750 --language ${LANGUAGE} | xargs python ${FAIRSEQ_MODULE}/validate.py
 
-python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 1 --language ${LANGUAGE} | xargs python ${FAIRSEQ_MODULE}/validate.py
+python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 1000 --language ${LANGUAGE} | xargs python ${FAIRSEQ_MODULE}/validate.py
 "
