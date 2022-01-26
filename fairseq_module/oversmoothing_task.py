@@ -17,7 +17,6 @@ from typing import Any, Dict, List, Optional, Tuple
 from torch import Tensor
 from dataclasses import dataclass, field
 import logging
-from eos_criterions import compute_marginal_eos_entropy, compute_eos_entropy, compute_marginal_eos_entropy_batchwise, compute_eos_entropy_batchwise, compute_oversmoothing_logratio
 import numpy as np
 
 import collections

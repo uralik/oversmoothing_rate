@@ -18,22 +18,27 @@ In order to utilize the scripts provided, one should set the following environme
 export OVERLAY_PATH= # only for SLURM + singularity
 export CUDA_SIF_PATH= # only for SLURM + singularity
 
+# used to construct fairseq --save-dir
 export EXPERIMENTS_DIRECTORY_WMT=
 export EXPERIMENTS_DIRECTORY_IWSLT=
 
+# used to construct fairseq data argument, we have used preprocessed data from fairseq-preprocess
 export DATA_IWSTL=
 export DATA_WMT19_DEEN=
 export DATA_WMT19_RUEN=
 export DATA_WMT19_ENDE=
 export DATA_WMT16_ENDE=
 
+# used to construct fairseq --finetune-from-model
 export PRETRAINED_MODEL_WMT19_DEEN=
 export PRETRAINED_MODEL_WMT19_RUEN=
 export PRETRAINED_MODEL_WMT19_ENDE=
 export PRETRAINED_MODEL_WMT16_ENDE=
 
+# fairseq user package
 export FAIRSEQ_MODULE=
 
+# this is only used for results post-processing
 export RESULTS_DIRECTORY=
 ```
 

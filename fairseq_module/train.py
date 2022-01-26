@@ -14,7 +14,6 @@ import os
 import pickle
 import sys
 import uuid
-import convert_to_meos_checkpoint as converter
 from typing import Dict, Optional, Any, List, Tuple, Callable
 
 import numpy as np
