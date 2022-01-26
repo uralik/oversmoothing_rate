@@ -20,9 +20,9 @@ conda activate nmt
 
 python  ${PYTHON_SWEEP_PATH} --call_fn ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} | xargs python ${FAIRSEQ_MODULE}/train.py
 
-python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 5 | xargs python ${FAIRSEQ_MODULE}/validate.py
+python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 1 | xargs python ${FAIRSEQ_MODULE}/validate.py
 
-python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 1000 | xargs python ${FAIRSEQ_MODULE}/validate.py
+python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 5 | xargs python ${FAIRSEQ_MODULE}/validate.py
 
 python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 100 | xargs python ${FAIRSEQ_MODULE}/validate.py
 
@@ -32,5 +32,5 @@ python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experimen
 
 python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 750 | xargs python ${FAIRSEQ_MODULE}/validate.py
 
-python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 1 | xargs python ${FAIRSEQ_MODULE}/validate.py
+python ${PYTHON_SWEEP_PATH}  --call_fn validate_trained_sweep_ontest --experiment_name_to_validate ${EXPERIMENT_NAME} --sweep_step ${SLURM_ARRAY_TASK_ID} --beam 1000 | xargs python ${FAIRSEQ_MODULE}/validate.py
 "

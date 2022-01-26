@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=process_sweeps
 #SBATCH --open-mode=append
-#SBATCH --output=./slurm_output/%j_%x.out
-#SBATCH --error=./slurm_output/%j_%x.err
+#SBATCH --output=./slurm_output/%A_%a_%j_%x.out
+#SBATCH --error=./slurm_output/%A_%a_%j_%x.err
 #SBATCH --export=ALL
 #SBATCH --time=2:00:00
 #SBATCH --mem=150G

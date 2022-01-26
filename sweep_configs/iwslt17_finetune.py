@@ -7,7 +7,7 @@ import os
 import pickle
 from glob import glob
 
-from sweep_utils import  add_train_iwslt17_de_fr_zh_oversmoothing, all_vs_all_grid, compose_cmd_args, add_common_validation
+from sweep_utils import add_train_iwslt17_de_fr_zh_oversmoothing, all_vs_all_grid, compose_cmd_args, add_common_validation
 
 def finetune_iwslt17_oversmoothing_grid_label_smoothing(sweep_step, language):
     experiment_name = f'finetune_iwslt17_oversmoothing_grid_label_smoothing_{language}'

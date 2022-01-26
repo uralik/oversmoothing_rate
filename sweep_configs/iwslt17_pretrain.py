@@ -22,20 +22,11 @@ def pretrain_iwslt17_pure_baseline_nllstop(sweep_step, language):
     kv_opts['--validate-interval-updates'] = '2000'
     kv_opts['--best-checkpoint-metric'] = 'nll_loss'
     kv_opts['--patience'] = 5
-    del kv_opts['--validate-interval']
 
     kv_opts['--max-tokens'] = '4096'
     kv_opts['--lr'] = '5e-4'  # we train for real now
 
     kv_opts['--label-smoothing'] = 0.1
-
-    del kv_opts['--eos-choice']
-    del kv_opts['--marginal-entropy-weight']
-    del kv_opts['--conditional-entropy-weight']
-    del kv_opts['--user-dir']
-    del kv_opts['--eval-bleu']
-    del kv_opts['--maximize-best-checkpoint-metric']
-    del kv_opts['--eval-bleu-args']
 
     # grid is defined here
     grid = collections.OrderedDict()
@@ -72,6 +63,8 @@ def validate_trained_sweep_ontest(sweep_step, experiment_name_to_validate, beam,
     kv_opts = add_common_validation(kv_opts, args_from_trained_model)
 
     kv_opts['data'] = os.path.join(os.environ.get('DATA_IWSLT'), f'iwslt17.tokenized.{language}-en')
+
+    kv_opts['--task'] = 'translation_oversmoothing'
 
     kv_opts['--max-tokens'] = '256'
     kv_opts['--valid-subset'] = 'test'
